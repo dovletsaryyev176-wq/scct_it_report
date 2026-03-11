@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>Welaýatlar we şäherler</h3>
+    <button class="btn btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#addCityModal">+ Täze şäher goşmak</button>
+</div>
+
+<div class="table-responsive bg-white rounded shadow-sm">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-dark">
+            <tr>
+                <th>Ady</th>
+                <th>Ýagday</th>
+                <th>Ulgama goşulan wagty</th>
+                <th>Ulgamda soňky üýtgedilen wagty</th>
+                <th class="text-end">Amallar</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for city in cities %}
+            <tr>
+                <td><strong>{{ city.name }}</strong></td>
+                <td>
+                    {% if city.status == 'active' %}
+                    <span class="badge bg-success-subtle text-success border border-success px-3">Işjeň</span>
+                    {% else %}
+                    <span class="badge bg-danger-subtle text-danger border border-danger px-3">Bloklanan</span>
+                    {% endif %}
+                </td>
+                <td class="text-muted small">{{ city.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                <td class="text-muted small">{{ city.updated_at.strftime('%H:%M:%S') }}</td>
+                <td class="text-end">
+                    <form action="{{ url_for('admin.toggle_city_status', city_id=city.id) }}" method="POST">
+                        <button class="btn btn-sm {{ 'btn-outline-danger' if city.status == 'active' else 'btn-outline-success' }}">
+                            {{ 'Bloklamak' if city.status == 'active' else 'Blokdan açmak' }}
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="modal fade" id="addCityModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form method="POST" class="modal-content border-0 shadow">
+            <div class="modal-header"><h5>Täze welaýat ýa-da şäher goşmak</h5></div>
+            <div class="modal-body">
+                <input type="text" name="name" class="form-control form-control-lg" placeholder="Welaýatyň ýa-da şäheriň ady..." required>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Ret et</button>
+                <button type="submit" class="btn btn-success">Ýatda sakla</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

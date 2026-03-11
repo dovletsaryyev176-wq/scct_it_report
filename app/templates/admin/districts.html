@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>Etraplar</h3>
+    <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addDistrictModal">+ Täze etrap goşmak</button>
+</div>
+
+<div class="table-responsive bg-white rounded shadow-sm">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-dark">
+            <tr>
+                <th>Etrap</th>
+                <th>Degişli welaýaty ýa-da şäheri</th>
+                <th>Ýagdaýy</th>
+                <th>Ulgama hasaba alnan wagty</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for dist in districts %}
+            <tr>
+                <td><strong>{{ dist.name }}</strong></td>
+                <td><span class="badge bg-secondary">{{ dist.city_name }}</span></td>
+                <td>{{ dist.status }}</td>
+                <td class="small">{{ dist.created_at.strftime('%d.%m.%Y') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="modal fade" id="addDistrictModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form method="POST" class="modal-content">
+            <div class="modal-header"><h5>Täze etrap</h5></div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Degişli welaýaty ýa-da şäheri</label>
+                    <select name="city_id" class="form-select" required>
+                        {% for city in cities %}
+                        <option value="{{ city.id }}">{{ city.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Etrabyň ady</label>
+                    <input type="text" name="name" class="form-control" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Ýatda sakla</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

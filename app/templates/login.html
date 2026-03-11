@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center pt-5">
+    <div class="col-md-4">
+        <div class="card border-0 shadow">
+            <div class="card-body p-4">
+                <h4 class="text-center mb-4">"E-MAKSATNAMA" ulgamy</h4>
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Ulanyjy ady</label>
+                        <input type="text" name="username" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Gizlin belgisi</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-dark w-100 mt-2">Ulgama gir</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
