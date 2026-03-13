@@ -2,7 +2,7 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h3>Welaýatlar we şäherler</h3>
-    <button class="btn btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#addCityModal">+ Täze şäher goşmak</button>
+    <button class="btn btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#addCityModal">+ Täze welaýat goşmak</button>
 </div>
 
 <div class="table-responsive bg-white rounded shadow-sm">
@@ -10,9 +10,8 @@
         <thead class="table-dark">
             <tr>
                 <th>Ady</th>
-                <th>Ýagday</th>
-                <th>Ulgama goşulan wagty</th>
-                <th>Ulgamda soňky üýtgedilen wagty</th>
+                <th>Ýagdaýy</th>
+                <th>Goşulan wagty</th>
                 <th class="text-end">Amallar</th>
             </tr>
         </thead>
@@ -27,14 +26,24 @@
                     <span class="badge bg-danger-subtle text-danger border border-danger px-3">Bloklanan</span>
                     {% endif %}
                 </td>
-                <td class="text-muted small">{{ city.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
-                <td class="text-muted small">{{ city.updated_at.strftime('%H:%M:%S') }}</td>
+                <td class="text-muted small">
+                    {{ city.created_at.strftime('%d.%m.%Y') }}<br>
+                    <span style="font-size: 0.8em;">(Täzelendi: {{ city.updated_at.strftime('%H:%M') }})</span>
+                </td>
                 <td class="text-end">
-                    <form action="{{ url_for('admin.toggle_city_status', city_id=city.id) }}" method="POST">
-                        <button class="btn btn-sm {{ 'btn-outline-danger' if city.status == 'active' else 'btn-outline-success' }}">
-                            {{ 'Bloklamak' if city.status == 'active' else 'Blokdan açmak' }}
-                        </button>
+                    <div class="d-flex justify-content-end gap-2">
+                    <button class="btn btn-sm btn-outline-success" 
+                    onclick="editCity('{{ city.id }}', '{{ city.name }}')" 
+                    data-bs-toggle="modal" data-bs-target="#editCityModal">
+                    Adyny üýtgetmek
+                    </button>
+
+                    <form action="{{ url_for('admin.toggle_city_status', city_id=city.id) }}" method="POST" class="m-0">
+                     <button class="btn btn-sm {{ 'btn-outline-danger' if city.status == 'active' else 'btn-outline-success' }}">
+                    {{ 'Bloklamak' if city.status == 'active' else 'Blokdan açmak' }}
+                    </button>
                     </form>
+                    </div>
                 </td>
             </tr>
             {% endfor %}
@@ -45,9 +54,9 @@
 <div class="modal fade" id="addCityModal" tabindex="-1">
     <div class="modal-dialog">
         <form method="POST" class="modal-content border-0 shadow">
-            <div class="modal-header"><h5>Täze welaýat ýa-da şäher goşmak</h5></div>
+            <div class="modal-header bg-success text-white"><h5>Täze welaýat goşmak</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
-                <input type="text" name="name" class="form-control form-control-lg" placeholder="Welaýatyň ýa-da şäheriň ady..." required>
+                <input type="text" name="name" class="form-control form-control-lg" placeholder="Welaýatyň ady..." required>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">Ret et</button>
@@ -56,4 +65,35 @@
         </form>
     </div>
 </div>
+
+<div class="modal fade" id="editCityModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form action="{{ url_for('admin.update_city') }}" method="POST" class="modal-content border-0 shadow">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Welaýatyň adyny üýtgetmek</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="id" id="edit-city-id">
+                <div class="mb-3">
+                    <label class="form-label">Welaýatyň täze ady</label>
+                    <input type="text" name="name" id="edit-city-name" class="form-control form-control-lg" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Ret et</button>
+                <button type="submit" class="btn btn-success">Ýatda sakla</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+
+function editCity(id, name) {
+    document.getElementById('edit-city-id').value = id;
+    document.getElementById('edit-city-name').value = name;
+}
+</script>
+
 {% endblock %}

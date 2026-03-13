@@ -1,5 +1,4 @@
-
--- Таблица пользователей
+-- Ulanyjylar
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
@@ -12,7 +11,7 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Таблица городов
+-- Welaýatlar
 CREATE TABLE cities (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -21,12 +20,13 @@ CREATE TABLE cities (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Таблица районов (связь с городами)
+-- Etraplar we şäherler
 CREATE TABLE districts (
     id INT AUTO_INCREMENT PRIMARY KEY,
     city_id INT NOT NULL,
     name VARCHAR(255) NOT NULL,
     status ENUM('active', 'blocked') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (city_id) REFERENCES cities(id) ON DELETE CASCADE
 );

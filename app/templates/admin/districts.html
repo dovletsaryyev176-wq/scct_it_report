@@ -1,27 +1,54 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3>Etraplar</h3>
-    <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addDistrictModal">+ Täze etrap goşmak</button>
+    <h3>Etraplar we şäherler</h3>
+    <button class="btn btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#addDistrictModal">
+        + Täze etrap goşmak
+    </button>
 </div>
 
 <div class="table-responsive bg-white rounded shadow-sm">
     <table class="table table-hover align-middle mb-0">
         <thead class="table-dark">
             <tr>
-                <th>Etrap</th>
-                <th>Degişli welaýaty ýa-da şäheri</th>
-                <th>Ýagdaýy</th>
-                <th>Ulgama hasaba alnan wagty</th>
+                <th>Etrap / Şäher</th>
+                <th>Welaýat</th>
+                <th>Status</th>
+                <th>Goşulan wagty</th>
+                <th class="text-end">Amallar</th>
             </tr>
         </thead>
         <tbody>
             {% for dist in districts %}
             <tr>
                 <td><strong>{{ dist.name }}</strong></td>
-                <td><span class="badge bg-secondary">{{ dist.city_name }}</span></td>
-                <td>{{ dist.status }}</td>
-                <td class="small">{{ dist.created_at.strftime('%d.%m.%Y') }}</td>
+                <td><span class="badge bg-light text-dark border">{{ dist.city_name }}</span></td>
+                <td>
+                    {% if dist.status == 'active' %}
+                        <span class="badge bg-success-subtle text-success px-3">Işjeň</span>
+                    {% else %}
+                        <span class="badge bg-danger-subtle text-danger px-3">Bloklanan</span>
+                    {% endif %}
+                </td>
+                <td class="text-muted small">
+                    {{ dist.created_at.strftime('%d.%m.%Y') }}<br>
+                    <span style="font-size: 0.8em;">(Täzelendi: {{ dist.updated_at.strftime('%H:%M') }})</span>
+                </td>
+                <td class="text-end">
+                    <div class="d-flex justify-content-end gap-2">
+                        <button class="btn btn-sm btn-outline-success" 
+                                onclick="editDistrict('{{ dist.id }}', '{{ dist.name }}', '{{ dist.city_id }}')" 
+                                data-bs-toggle="modal" data-bs-target="#editDistrictModal">
+                            Adyny üýtgetmek
+                        </button>
+                        
+                        <form action="{{ url_for('admin.toggle_district_status', dist_id=dist.id) }}" method="POST" class="m-0">
+                            <button class="btn btn-sm {{ 'btn-outline-danger' if dist.status == 'active' else 'btn-outline-success' }}">
+                                {{ 'Bloklamak' if dist.status == 'active' else 'Blokdan açmak' }}
+                            </button>
+                        </form>
+                    </div>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
@@ -30,12 +57,13 @@
 
 <div class="modal fade" id="addDistrictModal" tabindex="-1">
     <div class="modal-dialog">
-        <form method="POST" class="modal-content">
-            <div class="modal-header"><h5>Täze etrap</h5></div>
+        <form method="POST" class="modal-content border-0 shadow">
+            <div class="modal-header bg-success text-white"><h5>Täze etrap goşmak</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label class="form-label">Degişli welaýaty ýa-da şäheri</label>
-                    <select name="city_id" class="form-select" required>
+                    <label class="form-label">Welaýaty saýlaň</label>
+                    <select name="city_id" class="form-select form-select-lg" required>
+                        <option value="" selected disabled>Saýlaň...</option>
                         {% for city in cities %}
                         <option value="{{ city.id }}">{{ city.name }}</option>
                         {% endfor %}
@@ -43,13 +71,49 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Etrabyň ady</label>
-                    <input type="text" name="name" class="form-control" required>
+                    <input type="text" name="name" class="form-control form-control-lg" placeholder="Adyny ýazyň..." required>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="submit" class="btn btn-primary">Ýatda sakla</button>
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Ret et</button>
+                <button type="submit" class="btn btn-success">Ýatda sakla</button>
             </div>
         </form>
     </div>
 </div>
+
+<div class="modal fade" id="editDistrictModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form action="{{ url_for('admin.update_district') }}" method="POST" class="modal-content border-0 shadow">
+            <div class="modal-header bg-success text-white"><h5>Etrabyň maglumatlaryny üýtgetmek</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <input type="hidden" name="id" id="edit-dist-id">
+                <div class="mb-3">
+                    <label class="form-label">Degişli welaýaty</label>
+                    <select name="city_id" id="edit-dist-city" class="form-select">
+                        {% for city in cities %}
+                        <option value="{{ city.id }}">{{ city.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Etrabyň täze ady</label>
+                    <input type="text" name="name" id="edit-dist-name" class="form-control form-control-lg" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Ret et</button>
+                <button type="submit" class="btn btn-success">Üýtgetmek</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function editDistrict(id, name, cityId) {
+    document.getElementById('edit-dist-id').value = id;
+    document.getElementById('edit-dist-name').value = name;
+    document.getElementById('edit-dist-city').value = cityId;
+}
+</script>
 {% endblock %}

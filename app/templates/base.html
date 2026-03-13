@@ -28,15 +28,14 @@
                     {% if session.get('role') == 'admin' %}
                         <li class="nav-item">
                             <a class="nav-link {{ 'active' if request.path == url_for('admin.manage_cities') }}" 
-                               href="{{ url_for('admin.manage_cities') }}">Города</a>
+                               href="{{ url_for('admin.manage_cities') }}">Welaýatlar</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {{ 'active' if request.path == url_for('admin.manage_districts') }}" 
-                               href="{{ url_for('admin.manage_districts') }}">Районы</a>
+                               href="{{ url_for('admin.manage_districts') }}">Etraplar we şäherler</a>
                         </li>
                     {% endif %}
                     
-                    {# Сюда в будущем можно добавить ссылки для User и Company_User #}
                 </ul>
 
                 <div class="navbar-nav ms-auto align-items-lg-center">
