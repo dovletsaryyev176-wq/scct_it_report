@@ -30,3 +30,20 @@ CREATE TABLE districts (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (city_id) REFERENCES cities(id) ON DELETE CASCADE
 );
+
+-- Edaralar
+CREATE TABLE organizations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    parent_id INT NULL,
+    city_id INT NOT NULL,
+    district_id INT NOT NULL,
+    address TEXT,
+    phone VARCHAR(50),
+    status ENUM('active', 'blocked') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (parent_id) REFERENCES organizations(id) ON DELETE SET NULL,
+    FOREIGN KEY (city_id) REFERENCES cities(id),
+    FOREIGN KEY (district_id) REFERENCES districts(id)
+);

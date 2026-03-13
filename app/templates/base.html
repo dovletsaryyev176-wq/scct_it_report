@@ -34,6 +34,10 @@
                             <a class="nav-link {{ 'active' if request.path == url_for('admin.manage_districts') }}" 
                                href="{{ url_for('admin.manage_districts') }}">Etraplar we şäherler</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ 'active' if request.path == url_for('admin.manage_organizations') }}" 
+                               href="{{ url_for('admin.manage_organizations') }}">Edaralar</a>
+                        </li>
                     {% endif %}
                     
                 </ul>
