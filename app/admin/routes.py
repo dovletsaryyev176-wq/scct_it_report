@@ -6,7 +6,7 @@ from app import get_db_connection
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
 
-#Welaýatlar barada maglumatlar we täze welaýaty goşmak
+#Welaýatlar barada maglumat almak we täze welaýaty goşmak
 @admin_bp.route('/cities', methods=['GET', 'POST'])
 @roles_required('admin')
 def manage_cities():
@@ -64,6 +64,7 @@ def update_city():
     return redirect(url_for('admin.manage_cities'))
 
 
+#Etraby ýa-da şäheri hasaba almak we maglumatlaryny gaýtarmak
 @admin_bp.route('/districts', methods=['GET', 'POST'])
 @roles_required('admin')
 def manage_districts():
@@ -79,7 +80,7 @@ def manage_districts():
             flash(f'"{name}" etraby üstünlikli goşuldy', 'success')
         return redirect(url_for('admin.manage_districts'))
 
-    # JOIN для получения названия велаята
+    
     cursor.execute("""
         SELECT d.*, c.name as city_name 
         FROM districts d 
@@ -88,13 +89,15 @@ def manage_districts():
     """)
     districts = cursor.fetchall()
 
-    # Список активных велаятов для выбора в модалке
+    
     cursor.execute("SELECT id, name FROM cities WHERE status = 'active' ORDER BY name")
     cities = cursor.fetchall()
     
     conn.close()
     return render_template('admin/districts.html', districts=districts, cities=cities)
 
+
+#Etrap ýa-da şäher boýunça maglumatlary täzelemek
 @admin_bp.route('/districts/update', methods=['POST'])
 @roles_required('admin')
 def update_district():
@@ -105,7 +108,7 @@ def update_district():
     if dist_id and city_id and name:
         conn = get_db_connection()
         with conn.cursor() as cursor:
-            # updated_at обновится сам на стороне MySQL
+            
             cursor.execute("UPDATE districts SET name = %s, city_id = %s WHERE id = %s", 
                            (name, city_id, dist_id))
             conn.commit()
@@ -113,6 +116,8 @@ def update_district():
         flash('Etrap maglumatlary täzelendi', 'success')
     return redirect(url_for('admin.manage_districts'))
 
+
+#Etraby ýa-da şäheri bloklamak
 @admin_bp.route('/districts/toggle/<int:dist_id>', methods=['POST'])
 @roles_required('admin')
 def toggle_district_status(dist_id):
@@ -129,6 +134,7 @@ def toggle_district_status(dist_id):
     return redirect(url_for('admin.manage_districts'))
 
 
+#Täze edara döretmek we maglumatlaryny almak
 @admin_bp.route('/organizations', methods=['GET', 'POST'])
 @roles_required('admin')
 def manage_organizations():
@@ -152,7 +158,7 @@ def manage_organizations():
             flash(f'"{name}" edarasy goşuldy', 'success')
         return redirect(url_for('admin.manage_organizations'))
 
-    # Получаем список организаций со всеми связями
+    
     cursor.execute("""
         SELECT o.*, c.name as city_name, d.name as district_name, p.name as parent_name
         FROM organizations o
@@ -163,7 +169,7 @@ def manage_organizations():
     """)
     orgs = cursor.fetchall()
 
-    # Списки для выпадающих меню в модалке
+    
     cursor.execute("SELECT id, name FROM cities WHERE status = 'active' ORDER BY name")
     cities = cursor.fetchall()
     
@@ -179,6 +185,7 @@ def manage_organizations():
                            districts=districts, parent_orgs=parent_orgs)
 
 
+#Edara boýunça maglumatlary täzelemek
 @admin_bp.route('/organizations/update', methods=['POST'])
 @roles_required('admin')
 def update_organization():
@@ -203,6 +210,8 @@ def update_organization():
         flash('Edaranyň maglumatlary täzelendi', 'success')
     return redirect(url_for('admin.manage_organizations'))
 
+
+#Edarany bloklamak we blokdan açmak
 @admin_bp.route('/organizations/toggle/<int:org_id>', methods=['POST'])
 @roles_required('admin')
 def toggle_org_status(org_id):
@@ -217,3 +226,98 @@ def toggle_org_status(org_id):
             flash(f'Edaranyň statusy "{new_status}" edildi', 'info')
     conn.close()
     return redirect(url_for('admin.manage_organizations'))
+
+
+#Döwlet maksatnamalary goşmak we maglumatlaryny almak
+@admin_bp.route('/programs', methods=['GET', 'POST'])
+@roles_required('admin')
+def manage_programs():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    if request.method == 'POST':
+        cursor.execute("""
+            INSERT INTO programs (name, order_date, order_number, start_date, end_date)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (request.form['name'], request.form['order_date'], request.form['order_number'], 
+              request.form['start_date'], request.form['end_date']))
+        conn.commit()
+        flash('Maksatnama goşuldy', 'success')
+        return redirect(url_for('admin.manage_programs'))
+    
+    cursor.execute("SELECT * FROM programs ORDER BY created_at DESC")
+    programs = cursor.fetchall()
+    conn.close()
+    return render_template('admin/programs.html', programs=programs)
+
+
+#Döwlet maksatnamalary barada maglumatlary üýtgetmek
+@admin_bp.route('/programs/update', methods=['POST'])
+@roles_required('admin')
+def update_program():
+    conn = get_db_connection()
+    with conn.cursor() as cursor:
+        cursor.execute("""
+            UPDATE programs SET name=%s, order_date=%s, order_number=%s, start_date=%s, end_date=%s
+            WHERE id=%s
+        """, (request.form['name'], request.form['order_date'], request.form['order_number'],
+              request.form['start_date'], request.form['end_date'], request.form['id']))
+        conn.commit()
+    conn.close()
+    flash('Maksatnama täzelendi', 'success')
+    return redirect(url_for('admin.manage_programs'))
+
+
+#Döwlet maksatnamalary bloklamak we blokdan açmak
+@admin_bp.route('/programs/toggle/<int:id>', methods=['POST'])
+@roles_required('admin')
+def toggle_program_status(id):
+    conn = get_db_connection()
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT status FROM programs WHERE id=%s", (id,))
+        p = cursor.fetchone()
+        new_status = 'blocked' if p['status'] == 'active' else 'active'
+        cursor.execute("UPDATE programs SET status=%s WHERE id=%s", (new_status, id))
+        conn.commit()
+    conn.close()
+    return redirect(url_for('admin.manage_programs'))
+
+
+#Çäreleri döretmek we maglumatlaryny almak
+@admin_bp.route('/events', methods=['GET', 'POST'])
+@roles_required('admin')
+def manage_events():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    if request.method == 'POST':
+        cursor.execute("""
+            INSERT INTO events (program_id, item_number, name, deadline)
+            VALUES (%s, %s, %s, %s)
+        """, (request.form['program_id'], request.form['item_number'], request.form['name'], request.form['deadline']))
+        event_id = cursor.lastrowid
+        
+        org_ids = request.form.getlist('org_ids')
+        for o_id in org_ids:
+            cursor.execute("INSERT INTO event_organizations (event_id, organization_id) VALUES (%s, %s)", (event_id, o_id))
+        conn.commit()
+        flash('Çäre goşuldy', 'success')
+        return redirect(url_for('admin.manage_events'))
+
+    
+    cursor.execute("""
+        SELECT e.*, p.name as program_name, GROUP_CONCAT(o.name SEPARATOR ', ') as org_names
+        FROM events e
+        JOIN programs p ON e.program_id = p.id
+        LEFT JOIN event_organizations eo ON e.id = eo.event_id
+        LEFT JOIN organizations o ON eo.organization_id = o.id
+        GROUP BY e.id ORDER BY e.item_number ASC
+    """)
+    events = cursor.fetchall()
+    
+    cursor.execute("SELECT id, name FROM programs WHERE status='active'")
+    progs = cursor.fetchall()
+    cursor.execute("SELECT id, name FROM organizations WHERE status='active'")
+    orgs = cursor.fetchall()
+    conn.close()
+    return render_template('admin/events.html', events=events, programs=progs, organizations=orgs)
+

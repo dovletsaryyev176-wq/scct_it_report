@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3>Edara-kärhanalar</h3>
+    <h3>Edaralar</h3>
     <button class="btn btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#addOrgModal">+ Täze edara goşmak</button>
 </div>
 
 <div class="table-responsive bg-white rounded shadow-sm">
     <table class="table table-hover align-middle mb-0">
-        <thead class="table-dark">
+        <thead class="border-bottom" style="border-width: 2px !important;">
             <tr>
                 <th>Ady</th>
                 <th>Degişli edarasy</th>
@@ -46,8 +46,8 @@
         </button>
         
         <form action="{{ url_for('admin.toggle_org_status', org_id=org.id) }}" method="POST" class="m-0">
-            <button class="btn btn-sm {{ 'btn-outline-danger' if org.status == 'active' else 'btn-outline-primary' }}">
-                {{ 'Bloklamak' if org.status == 'active' else 'Açmak' }}
+            <button class="btn btn-sm {{ 'btn-outline-danger' if org.status == 'active' else 'btn-outline-success' }}">
+                {{ 'Bloklamak' if org.status == 'active' else 'Blokdan açmak' }}
             </button>
         </form>
     </div>
@@ -61,7 +61,10 @@
 <div class="modal fade" id="addOrgModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <form method="POST" class="modal-content border-0 shadow">
-            <div class="modal-header"><h5>Täze edara hasaba almak</h5></div>
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Täze edara hasaba almak</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
             <div class="modal-body">
                 <div class="row g-3">
                     <div class="col-md-6">
@@ -136,7 +139,10 @@ function filterDistricts() {
 <div class="modal fade" id="editOrgModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <form action="{{ url_for('admin.update_organization') }}" method="POST" class="modal-content border-0 shadow">
-            <div class="modal-header"><h5>Edaranyň maglumatlaryny üýtgetmek</h5></div>
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Edaralar barada maglumatlary üýtgetmek</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
             <div class="modal-body">
                 <input type="hidden" name="id" id="edit-org-id">
                 <div class="row g-3">

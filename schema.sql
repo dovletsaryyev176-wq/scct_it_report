@@ -8,7 +8,8 @@ CREATE TABLE users (
     is_verified TINYINT(1) DEFAULT 0,
     otp_code VARCHAR(6),
     otp_expiry DATETIME,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 -- Welaýatlar
@@ -46,4 +47,41 @@ CREATE TABLE organizations (
     FOREIGN KEY (parent_id) REFERENCES organizations(id) ON DELETE SET NULL,
     FOREIGN KEY (city_id) REFERENCES cities(id),
     FOREIGN KEY (district_id) REFERENCES districts(id)
+);
+
+-- Maksatnamalar
+CREATE TABLE programs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(500) NOT NULL,
+    order_date DATE,            -- tassyklanan senesi
+    order_number VARCHAR(100),   -- belgisi
+    start_date DATE,            -- başlanýan senesi
+    end_date DATE,              -- tamamlanýan senesi
+    status ENUM('active', 'blocked') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Çäreler
+CREATE TABLE events (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    program_id INT NOT NULL,
+    item_number VARCHAR(50),    -- tertip belgisi
+    name TEXT NOT NULL,         -- çäräniň ady
+    deadline VARCHAR(255),      -- ýerine ýetirilmeli möhleti
+    status ENUM('active', 'blocked') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE
+);
+
+-- Maksatnamalary we çäreleri baglamak
+CREATE TABLE event_organizations (
+    event_id INT NOT NULL,
+    organization_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (event_id, organization_id),
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
+    FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
 );

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>Döwlet maksatnamalary</h3>
+    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addProgModal">+ Täze maksatnama</button>
+</div>
+
+<div class="bg-white rounded shadow-sm">
+    <table class="table table-hover align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>Ady</th>
+                <th>Sene / Belgi</th>
+                <th>Möhleti</th>
+                <th>Status</th>
+                <th class="text-end">Amallar</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in programs %}
+            <tr>
+                <td><strong>{{ p.name }}</strong></td>
+                <td>№{{ p.order_number }} <br> <small>{{ p.order_date }}</small></td>
+                <td>{{ p.start_date }} - {{ p.end_date }}</td>
+                <td>
+                    <span class="badge {{ 'bg-success' if p.status == 'active' else 'bg-danger' }}">
+                        {{ 'Işjeň' if p.status == 'active' else 'Bloklanan' }}
+                    </span>
+                </td>
+                <td class="text-end">
+                    <div class="d-flex justify-content-end gap-2">
+                        <button class="btn btn-sm btn-outline-success" onclick="editProg('{{p.id}}','{{p.name}}','{{p.order_date}}','{{p.order_number}}','{{p.start_date}}','{{p.end_date}}')" data-bs-toggle="modal" data-bs-target="#editProgModal">Üýtgetmek</button>
+                        <form action="{{ url_for('admin.toggle_program_status', id=p.id) }}" method="POST">
+                            <button class="btn btn-sm {{ 'btn-outline-danger' if p.status == 'active' else 'btn-outline-primary' }}">
+                                {{ 'Bloklamak' if p.status == 'active' else 'Açmak' }}
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="modal fade" id="addProgModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <form method="POST" class="modal-content border-0">
+            <div class="modal-header"><h5>Täze maksatnama</h5></div>
+            <div class="modal-body row g-3">
+                <div class="col-12"><label>Ady</label><input type="text" name="name" class="form-control" required></div>
+                <div class="col-md-6"><label>Tassyklanan senesi</label><input type="date" name="order_date" class="form-control"></div>
+                <div class="col-md-6"><label>Belgisi</label><input type="text" name="order_number" class="form-control"></div>
+                <div class="col-md-6"><label>Başlanýan senesi</label><input type="date" name="start_date" class="form-control"></div>
+                <div class="col-md-6"><label>Tamamlanýan senesi</label><input type="date" name="end_date" class="form-control"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-success">Ýatda sakla</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function editProg(id, name, date, num, start, end) {
+    document.getElementById('edit-id').value = id;
+    // ... логика заполнения полей для EditModal аналогично городам
+}
+</script>
+{% endblock %}

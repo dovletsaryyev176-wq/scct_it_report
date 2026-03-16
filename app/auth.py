@@ -2,8 +2,11 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from werkzeug.security import check_password_hash
 from functools import wraps
 
+
 auth_bp = Blueprint('auth', __name__)
 
+
+#hökman admin derejeli bolmalylar üçin
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -13,6 +16,8 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+
+#belli bir ulanyjy görnüşliler üçin
 def roles_required(*roles):
     def wrapper(f):
         @wraps(f)
@@ -27,6 +32,8 @@ def roles_required(*roles):
         return decorated_function
     return wrapper
 
+
+#Ulgama girmek
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     from app import get_db_connection
@@ -51,6 +58,8 @@ def login():
         flash('Nädogry ulanyjy ady ýa-da gizlin belgisi', 'danger')
     return render_template('login.html')
 
+
+#Ulgamdan çykmak
 @auth_bp.route('/logout')
 def logout():
     session.clear()

@@ -14,7 +14,7 @@
     </style>
 </head>
 <body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success mb-4 shadow">
         <div class="container">
             <a class="navbar-brand fw-bold" href="/">"E-MAKSATNAMA"</a>
 
@@ -26,19 +26,35 @@
                 
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     {% if session.get('role') == 'admin' %}
-                        <li class="nav-item">
-                            <a class="nav-link {{ 'active' if request.path == url_for('admin.manage_cities') }}" 
-                               href="{{ url_for('admin.manage_cities') }}">Welaýatlar</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ 'active' if request.path == url_for('admin.manage_districts') }}" 
-                               href="{{ url_for('admin.manage_districts') }}">Etraplar we şäherler</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ 'active' if request.path == url_for('admin.manage_organizations') }}" 
-                               href="{{ url_for('admin.manage_organizations') }}">Edaralar</a>
-                        </li>
-                    {% endif %}
+        <li class="nav-item">
+            <a class="nav-link {{ 'active' if request.path == url_for('admin.manage_cities') }}" 
+               href="{{ url_for('admin.manage_cities') }}">Welaýatlar</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {{ 'active' if request.path == url_for('admin.manage_districts') }}" 
+               href="{{ url_for('admin.manage_districts') }}">Etraplar</a>
+        </li>
+
+        <span class="nav-link text-white-50 d-none d-lg-block">|</span>
+
+        <li class="nav-item">
+            <a class="nav-link {{ 'active' if request.path == url_for('admin.manage_organizations') }}" 
+               href="{{ url_for('admin.manage_organizations') }}">Edaralar</a>
+        </li>
+
+        <span class="nav-link text-white-50 d-none d-lg-block">|</span>
+
+        <li class="nav-item">
+            <a class="nav-link {{ 'active' if request.path == url_for('admin.manage_programs') }}" 
+               href="{{ url_for('admin.manage_programs') }}">Maksatnamalar</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {{ 'active' if request.path == url_for('admin.manage_events') }}" 
+               href="{{ url_for('admin.manage_events') }}">Çäreler</a>
+        </li>
+            {% endif %}
+                    
+                
                     
                 </ul>
 
@@ -49,9 +65,11 @@
                             <span class="nav-link text-white-50 me-3 d-none d-lg-block">|</span>
                             <span class="nav-link text-white me-3">{{ session.username }}</span>
                         </div>
-                        <a class="btn btn-outline-danger btn-sm" href="{{ url_for('auth.logout') }}">Ulgamdan çykmak</a>
+                        <a class="btn btn-outline-light btn-sm px-3" href="{{ url_for('auth.logout') }}">
+    Ulgamdan çykmak
+</a>
                     {% else %}
-                        <a class="btn btn-primary btn-sm px-4" href="{{ url_for('auth.login') }}">Ulgama girmek</a>
+                        <a class="btn btn-outline-light btn-sm px-4" href="{{ url_for('auth.login') }}">Ulgama girmek</a>
                     {% endif %}
                 </div>
             </div>

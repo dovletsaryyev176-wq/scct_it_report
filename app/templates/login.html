@@ -1,22 +1,43 @@
 {% extends "base.html" %}
+
 {% block content %}
-<div class="row justify-content-center pt-5">
-    <div class="col-md-4">
-        <div class="card border-0 shadow">
-            <div class="card-body p-4">
-                <h4 class="text-center mb-4">"E-MAKSATNAMA" ulgamy</h4>
+<div class="row justify-content-center align-items-center" style="min-height: 70vh;">
+    <div class="col-md-5">
+        <div class="card shadow-lg border-0 rounded-4">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <h2 class="fw-bold text-success">E-MAKSATNAMA</h2>
+                    <p class="fw-semibold">TÜRKMENISTANYŇ ÝOKARY GÖZEGÇILIK EDARASY</p>
+                </div>
+
                 <form method="POST">
                     <div class="mb-3">
-                        <label class="form-label">Ulanyjy ady</label>
-                        <input type="text" name="username" class="form-control" required>
+                        <label class="form-label fw-semibold">Ulanyjy ady</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">👤</span>
+                            <input type="text" name="username" class="form-control border-start-0 bg-light" placeholder="Ulanyjy ady..." required autofocus>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Gizlin belgisi</label>
-                        <input type="password" name="password" class="form-control" required>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Gizlin belgisi</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">🔒</span>
+                            <input type="password" name="password" class="form-control border-start-0 bg-light" placeholder="Gizlin belgisi..." required>
+                        </div>
                     </div>
-                    <button type="submit" class="btn btn-dark w-100 mt-2">Ulgama gir</button>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg shadow-sm">
+                            Girmek
+                        </button>
+                    </div>
                 </form>
             </div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <small class="text-muted">© 2026, TÝGE</small>
         </div>
     </div>
 </div>
