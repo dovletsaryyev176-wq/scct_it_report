@@ -1,59 +1,202 @@
 {% extends "base.html" %}
+
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3>Çäreler</h3>
-    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addEventModal">+ Täze çäre</button>
+    <div>
+        <h3 class="fw-bold text-dark mb-0">Çäreler</h3>
+        <p class="text-muted small">Maksatnamalaýyn çäreleriň sanawy</p>
+    </div>
+    <button class="btn btn-success shadow-sm px-4" data-bs-toggle="modal" data-bs-target="#addEventModal">
+        <i class="bi bi-plus-lg"></i> + Täze çäre
+    </button>
 </div>
 
-<div class="bg-white rounded shadow-sm">
-    <table class="table table-hover align-middle">
-        <thead class="table-dark">
+<div class="table-responsive bg-white rounded-4 shadow-sm border-0">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light border-bottom">
             <tr>
-                <th>№</th>
-                <th>Çäräniň ady</th>
-                <th>Maksatnama</th>
-                <th>Jogapkärler</th>
-                <th class="text-end">Amallar</th>
+                <th class="text-secondary text-uppercase small px-4 py-3" style="width: 5%;">№</th>
+                <th class="text-secondary text-uppercase small py-3" style="width: 40%;">Çäräniň ady</th>
+                <th class="text-secondary text-uppercase small py-3" style="width: 25%;">Jogapkärler</th>
+                <th class="text-secondary text-uppercase small py-3" style="width: 10%;">Status</th>
+                <th class="text-end px-4 text-secondary text-uppercase small py-3" style="width: 20%;">Amallar</th>
             </tr>
         </thead>
         <tbody>
             {% for e in events %}
             <tr>
-                <td>{{ e.item_number }}</td>
-                <td>{{ e.name }} <br> <small class="text-primary">{{ e.deadline }}</small></td>
-                <td><small>{{ e.program_name }}</small></td>
-                <td><small class="text-muted">{{ e.org_names }}</small></td>
-                <td class="text-end">
-                     </td>
+                <td class="px-4 fw-bold text-success">{{ e.item_number }}</td>
+                <td>
+                    <div class="fw-bold text-dark" style="line-height: 1.2;">{{ e.name }}</div>
+                    <div class="mt-1">
+                        <small class="text-muted"><i class="bi bi-calendar-event"></i> Möhet: {{ e.deadline }}</small>
+                    </div>
+                    <span class="badge bg-light text-secondary border-0 mt-1" style="font-size: 0.7rem; font-weight: 500;">
+                        {{ e.program_name }}
+                    </span>
+                </td>
+                <td>
+                    <div class="small text-primary fw-medium" style="max-height: 60px; overflow-y: auto;">
+                        {{ e.org_names or 'Bellenilmedi' }}
+                    </div>
+                </td>
+                <td>
+                    <span class="badge {{ 'bg-success-subtle text-success' if e.status == 'active' else 'bg-danger-subtle text-danger' }} px-3 py-2 rounded-pill">
+                        {{ 'Işjeň' if e.status == 'active' else 'Bloklanan' }}
+                    </span>
+                </td>
+                <td class="text-end px-4">
+                    <div class="d-flex justify-content-end gap-2">
+                        <button class="btn btn-sm btn-outline-success px-3" 
+                                onclick="editEvent('{{e.id}}', '{{e.program_id}}', '{{e.item_number}}', `{{e.name}}`, '{{e.deadline}}', '{{e.org_ids_list}}')" 
+                                data-bs-toggle="modal" data-bs-target="#editEventModal">
+                            Üýtgetmek
+                        </button>
+                        
+                        <form action="{{ url_for('admin.toggle_event_status', id=e.id) }}" method="POST" class="m-0">
+                            <button class="btn btn-sm {{ 'btn-outline-danger' if e.status == 'active' else 'btn-outline-primary' }} px-3">
+                                {{ 'Bloklamak' if e.status == 'active' else 'Açmak' }}
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="text-center py-5 text-muted">Häzirki wagtda hiç hili çäre goşulmady.</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
 
-<div class="modal fade" id="addEventModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <form method="POST" class="modal-content border-0">
-            <div class="modal-header"><h5>Täze çäre</h5></div>
-            <div class="modal-body row g-3">
-                <div class="col-md-2"><label>№</label><input type="text" name="item_number" class="form-control"></div>
+<div class="modal fade" id="addEventModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <form action="{{ url_for('admin.manage_events') }}" method="POST" class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="fw-bold">Täze çäre goşmak</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-4 row g-3">
+                <div class="col-md-2">
+                    <label class="form-label fw-bold small text-uppercase text-secondary">№</label>
+                    <input type="text" name="item_number" class="form-control bg-light border-0" placeholder="1.1" required>
+                </div>
                 <div class="col-md-10">
-                    <label>Maksatnama</label>
-                    <select name="program_id" class="form-select">
-                        {% for p in programs %}<option value="{{p.id}}">{{p.name}}</option>{% endfor %}
+                    <label class="form-label fw-bold small text-uppercase text-secondary">Maksatnama</label>
+                    <select name="program_id" class="form-select bg-light border-0" required>
+                        <option value="" selected disabled>Maksatnamany saýlaň...</option>
+                        {% for p in programs %}
+                            <option value="{{ p.id }}">{{ p.name }}</option>
+                        {% endfor %}
                     </select>
                 </div>
-                <div class="col-12"><label>Çäräniň ady</label><textarea name="name" class="form-control"></textarea></div>
-                <div class="col-md-6"><label>Möhleti</label><input type="text" name="deadline" class="form-control"></div>
+                <div class="col-12">
+                    <label class="form-label fw-bold small text-uppercase text-secondary">Çäräniň ady</label>
+                    <textarea name="name" class="form-control bg-light border-0" rows="3" placeholder="Çäräniň doly ady..." required></textarea>
+                </div>
                 <div class="col-md-6">
-                    <label>Jogapkär edaralar</label>
-                    <select name="org_ids" class="form-select" multiple style="height: 100px;">
-                        {% for o in organizations %}<option value="{{o.id}}">{{o.name}}</option>{% endfor %}
+                    <label class="form-label fw-bold small text-uppercase text-secondary">Ýerine ýetirilmeli möhleti</label>
+                    <input type="text" name="deadline" class="form-control bg-light border-0" placeholder="Mysal: 2026 ý. dowamynda" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold small text-uppercase text-secondary">Jogapkär edaralar</label>
+                    <select name="org_ids" class="form-select bg-light border-0" multiple style="height: 120px;" required>
+                        {% for o in organizations %}
+                            <option value="{{ o.id }}">{{ o.name }}</option>
+                        {% endfor %}
                     </select>
+                    <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">
+                        <i class="bi bi-info-circle"></i> Ctrl basyp tutup birnäçesini saýlaň
+                    </small>
                 </div>
             </div>
-            <div class="modal-footer"><button type="submit" class="btn btn-success">Sakla</button></div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Ret et</button>
+                <button type="submit" class="btn btn-success px-4 shadow-sm">Ýatda sakla</button>
+            </div>
         </form>
     </div>
 </div>
+
+<div class="modal fade" id="editEventModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <form action="{{ url_for('admin.update_event') }}" method="POST" class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="fw-bold">Çäräni üýtgetmek</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-4 row g-3">
+                <input type="hidden" name="id" id="edit-ev-id">
+                <div class="col-md-2">
+                    <label class="form-label fw-bold small text-uppercase text-secondary">№</label>
+                    <input type="text" name="item_number" id="edit-ev-num" class="form-control bg-light border-0" required>
+                </div>
+                <div class="col-md-10">
+                    <label class="form-label fw-bold small text-uppercase text-secondary">Maksatnama</label>
+                    <select name="program_id" id="edit-ev-prog" class="form-select bg-light border-0" required>
+                        {% for p in programs %}
+                            <option value="{{ p.id }}">{{ p.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-bold small text-uppercase text-secondary">Çäräniň ady</label>
+                    <textarea name="name" id="edit-ev-name" class="form-control bg-light border-0" rows="3" required></textarea>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold small text-uppercase text-secondary">Ýerine ýetirilmeli möhleti</label>
+                    <input type="text" name="deadline" id="edit-ev-deadline" class="form-control bg-light border-0" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold small text-uppercase text-secondary">Jogapkär edaralar</label>
+                    <select name="org_ids" id="edit-ev-orgs" class="form-select bg-light border-0" multiple style="height: 120px;" required>
+                        {% for o in organizations %}
+                            <option value="{{ o.id }}">{{ o.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">
+                        <i class="bi bi-info-circle"></i> Ctrl basyp tutup birnäçesini saýlaň
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Ret et</button>
+                <button type="submit" class="btn btn-success px-4 shadow-sm">Täzele</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+/**
+ * Функция для заполнения модального окна редактирования
+ */
+function editEvent(id, progId, num, name, deadline, orgIds) {
+    // Заполняем текстовые поля и селекты
+    document.getElementById('edit-ev-id').value = id;
+    document.getElementById('edit-ev-prog').value = progId;
+    document.getElementById('edit-ev-num').value = num;
+    document.getElementById('edit-ev-name').value = name;
+    document.getElementById('edit-ev-deadline').value = deadline;
+
+    // Работа с множественным выбором организаций
+    const select = document.getElementById('edit-ev-orgs');
+    
+    // Очищаем предыдущие выделения на случай ошибки
+    for (let i = 0; i < select.options.length; i++) {
+        select.options[i].selected = false;
+    }
+
+    // Если есть список ID организаций, разбиваем его и выделяем нужные option
+    if (orgIds) {
+        const idsArray = orgIds.split(','); 
+        for (let option of select.options) {
+            if (idsArray.includes(option.value)) {
+                option.selected = true;
+            }
+        }
+    }
+}
+</script>
 {% endblock %}

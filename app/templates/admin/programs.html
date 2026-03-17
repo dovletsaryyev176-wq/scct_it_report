@@ -1,37 +1,52 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3>Döwlet maksatnamalary</h3>
-    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addProgModal">+ Täze maksatnama</button>
+    <div>
+        <h3 class="fw-bold text-dark mb-0">Döwlet maksatnamalary</h3>
+        <p class="text-muted small">Ulgamdaky ähli kabul edilen maksatnamalar</p>
+    </div>
+    <button class="btn btn-success shadow-sm px-4" data-bs-toggle="modal" data-bs-target="#addProgModal">+ Täze maksatnama</button>
 </div>
 
-<div class="bg-white rounded shadow-sm">
-    <table class="table table-hover align-middle">
-        <thead class="table-dark">
+<div class="table-responsive bg-white rounded-4 shadow-sm border-0">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light border-bottom">
             <tr>
-                <th>Ady</th>
-                <th>Sene / Belgi</th>
-                <th>Möhleti</th>
-                <th>Status</th>
-                <th class="text-end">Amallar</th>
+                <th class="text-secondary text-uppercase small px-4 py-3">Maksatnamanyň ady</th>
+                <th class="text-secondary text-uppercase small py-3">Sene / Belgi</th>
+                <th class="text-secondary text-uppercase small py-3">Möhleti</th>
+                <th class="text-secondary text-uppercase small py-3">Status</th>
+                <th class="text-end px-4 text-secondary text-uppercase small py-3">Amallar</th>
             </tr>
         </thead>
         <tbody>
             {% for p in programs %}
             <tr>
-                <td><strong>{{ p.name }}</strong></td>
-                <td>№{{ p.order_number }} <br> <small>{{ p.order_date }}</small></td>
-                <td>{{ p.start_date }} - {{ p.end_date }}</td>
+                <td class="px-4"><strong>{{ p.name }}</strong></td>
                 <td>
-                    <span class="badge {{ 'bg-success' if p.status == 'active' else 'bg-danger' }}">
+                    <span class="text-dark">№{{ p.order_number }}</span><br>
+                    <small class="text-muted">{{ p.order_date }}</small>
+                </td>
+                <td>
+                    <small class="fw-bold text-success">{{ p.start_date }}</small> 
+                    <span class="text-muted">/</span> 
+                    <small class="fw-bold text-danger">{{ p.end_date }}</small>
+                </td>
+                <td>
+                    <span class="badge {{ 'bg-success-subtle text-success' if p.status == 'active' else 'bg-danger-subtle text-danger' }} px-3 py-2 rounded-pill">
                         {{ 'Işjeň' if p.status == 'active' else 'Bloklanan' }}
                     </span>
                 </td>
-                <td class="text-end">
+                <td class="text-end px-4">
                     <div class="d-flex justify-content-end gap-2">
-                        <button class="btn btn-sm btn-outline-success" onclick="editProg('{{p.id}}','{{p.name}}','{{p.order_date}}','{{p.order_number}}','{{p.start_date}}','{{p.end_date}}')" data-bs-toggle="modal" data-bs-target="#editProgModal">Üýtgetmek</button>
-                        <form action="{{ url_for('admin.toggle_program_status', id=p.id) }}" method="POST">
-                            <button class="btn btn-sm {{ 'btn-outline-danger' if p.status == 'active' else 'btn-outline-primary' }}">
+                        <button class="btn btn-sm btn-outline-success px-3" 
+                                onclick="editProg('{{p.id}}', '{{p.name}}', '{{p.order_date}}', '{{p.order_number}}', '{{p.start_date}}', '{{p.end_date}}')" 
+                                data-bs-toggle="modal" data-bs-target="#editProgModal">
+                            Üýtgetmek
+                        </button>
+                        
+                        <form action="{{ url_for('admin.toggle_program_status', id=p.id) }}" method="POST" class="m-0">
+                            <button class="btn btn-sm {{ 'btn-outline-danger' if p.status == 'active' else 'btn-outline-primary' }} px-3">
                                 {{ 'Bloklamak' if p.status == 'active' else 'Açmak' }}
                             </button>
                         </form>
@@ -44,18 +59,69 @@
 </div>
 
 <div class="modal fade" id="addProgModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <form method="POST" class="modal-content border-0">
-            <div class="modal-header"><h5>Täze maksatnama</h5></div>
-            <div class="modal-body row g-3">
-                <div class="col-12"><label>Ady</label><input type="text" name="name" class="form-control" required></div>
-                <div class="col-md-6"><label>Tassyklanan senesi</label><input type="date" name="order_date" class="form-control"></div>
-                <div class="col-md-6"><label>Belgisi</label><input type="text" name="order_number" class="form-control"></div>
-                <div class="col-md-6"><label>Başlanýan senesi</label><input type="date" name="start_date" class="form-control"></div>
-                <div class="col-md-6"><label>Tamamlanýan senesi</label><input type="date" name="end_date" class="form-control"></div>
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <form method="POST" class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0"><h5>Täze maksatnama goşmak</h5></div>
+            <div class="modal-body py-4 row g-3">
+                <div class="col-12">
+                    <label class="form-label fw-bold small text-uppercase">Maksatnamanyň ady</label>
+                    <input type="text" name="name" class="form-control bg-light border-0" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold small text-uppercase">Tassyklanan senesi</label>
+                    <input type="date" name="order_date" class="form-control bg-light border-0">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold small text-uppercase">Belgisi (№)</label>
+                    <input type="text" name="order_number" class="form-control bg-light border-0">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold small text-uppercase">Başlanýan senesi</label>
+                    <input type="date" name="start_date" class="form-control bg-light border-0">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold small text-uppercase">Tamamlanýan senesi</label>
+                    <input type="date" name="end_date" class="form-control bg-light border-0">
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="submit" class="btn btn-success">Ýatda sakla</button>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Ret et</button>
+                <button type="submit" class="btn btn-success px-4">Ýatda sakla</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="editProgModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <form action="{{ url_for('admin.update_program') }}" method="POST" class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0"><h5>Maksatnamany üýtgetmek</h5></div>
+            <div class="modal-body py-4 row g-3">
+                <input type="hidden" name="id" id="edit-id">
+                <div class="col-12">
+                    <label class="form-label fw-bold small text-uppercase">Maksatnamanyň ady</label>
+                    <input type="text" name="name" id="edit-name" class="form-control bg-light border-0" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold small text-uppercase">Tassyklanan senesi</label>
+                    <input type="date" name="order_date" id="edit-order-date" class="form-control bg-light border-0">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold small text-uppercase">Belgisi (№)</label>
+                    <input type="text" name="order_number" id="edit-order-number" class="form-control bg-light border-0">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold small text-uppercase">Başlanýan senesi</label>
+                    <input type="date" name="start_date" id="edit-start-date" class="form-control bg-light border-0">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold small text-uppercase">Tamamlanýan senesi</label>
+                    <input type="date" name="end_date" id="edit-end-date" class="form-control bg-light border-0">
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Ret et</button>
+                <button type="submit" class="btn btn-success px-4">Üýtgetmek</button>
             </div>
         </form>
     </div>
@@ -64,7 +130,11 @@
 <script>
 function editProg(id, name, date, num, start, end) {
     document.getElementById('edit-id').value = id;
-    // ... логика заполнения полей для EditModal аналогично городам
+    document.getElementById('edit-name').value = name;
+    document.getElementById('edit-order-date').value = date;
+    document.getElementById('edit-order-number').value = num;
+    document.getElementById('edit-start-date').value = start;
+    document.getElementById('edit-end-date').value = end;
 }
 </script>
 {% endblock %}

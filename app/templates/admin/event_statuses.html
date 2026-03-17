@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>Çäreleriň ýagdaýlary</h3>
+    <button class="btn btn-success shadow-sm px-4" data-bs-toggle="modal" data-bs-target="#addStatusModal">+ Täze ýagdaýýyň görnüşi</button>
+</div>
+
+<div class="table-responsive bg-white rounded-4 shadow-sm border-0">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="border-bottom" style="border-width: 2px !important;">
+            <tr>
+                <th class="text-secondary text-uppercase small px-4 py-3">Ýagdaýyň görnüşiniň ady</th>
+                <th class="text-secondary text-uppercase small py-3">Ulgama goşulan wagty</th>
+                <th class="text-secondary text-uppercase small py-3">Ýagdaýy</th>
+                <th class="text-end px-4 text-secondary text-uppercase small py-3">Amallar</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in statuses %}
+            <tr>
+                <td class="px-4"><strong>{{ s.name }}</strong></td>
+                <td class="text-muted small">{{ s.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                <td>
+                    <span class="badge {{ 'bg-success-subtle text-success' if s.status == 'active' else 'bg-danger-subtle text-danger' }} px-3 py-2 rounded-pill">
+                        {{ 'Işjeň' if s.status == 'active' else 'Bloklanan' }}
+                    </span>
+                </td>
+                <td class="text-end px-4">
+                    <div class="d-flex justify-content-end gap-2">
+                        <button class="btn btn-sm btn-outline-success px-3" onclick="openEditModal('{{s.id}}', '{{s.name}}')" data-bs-toggle="modal" data-bs-target="#editStatusModal">Üýtgetmek</button>
+                        <form action="{{ url_for('admin.toggle_event_type_status', id=s.id) }}" method="POST" class="m-0">
+                            <button class="btn btn-sm {{ 'btn-outline-danger' if s.status == 'active' else 'btn-outline-success' }} px-3">
+                                {{ 'Bloklamak' if s.status == 'active' else 'Blokdan açmak' }}
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="modal fade" id="addStatusModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="POST" class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-success text-white"><h5>Täze ýagdaýyň görnüşini goşmak</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body py-4">
+                <label class="form-label fw-bold text-secondary small">ÝAGDAÝYŇ ADY</label>
+                <input type="text" name="name" class="form-control form-control-lg bg-light border-0" placeholder="Mysal: Ýerine ýetirildi" required>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Ret et</button>
+                <button type="submit" class="btn btn-success px-4">Ýatda sakla</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="editStatusModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <form action="{{ url_for('admin.update_event_status') }}" method="POST" class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-success text-white"><h5>Ýagdaýyň görnüşini üýtgetmek</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body py-4">
+                <input type="hidden" name="id" id="edit-status-id">
+                <label class="form-label fw-bold text-secondary small">TÄZE ADY</label>
+                <input type="text" name="name" id="edit-status-name" class="form-control form-control-lg bg-light border-0" required>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Ret et</button>
+                <button type="submit" class="btn btn-success px-4">Üýtgetmek</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openEditModal(id, name) {
+    document.getElementById('edit-status-id').value = id;
+    document.getElementById('edit-status-name').value = name;
+}
+</script>
+{% endblock %}

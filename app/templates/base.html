@@ -52,6 +52,15 @@
             <a class="nav-link {{ 'active' if request.path == url_for('admin.manage_events') }}" 
                href="{{ url_for('admin.manage_events') }}">Çäreler</a>
         </li>
+        <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="reportSettings" role="button" data-bs-toggle="dropdown">
+        Hasabat sazlamalary
+    </a>
+    <ul class="dropdown-menu border-0 shadow">
+        <li><a class="dropdown-item" href="{{ url_for('admin.manage_event_statuses') }}">Ýagdaýlar</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('admin.manage_failure_reasons') }}">Sebäpler</a></li>
+    </ul>
+</li>
             {% endif %}
                     
                 
