@@ -298,17 +298,17 @@ def manage_events():
         item_number = request.form.get('item_number')
         name = request.form.get('name')
         deadline = request.form.get('deadline')
-        org_ids = request.form.getlist('org_ids') # Получаем список выбранных организаций
+        org_ids = request.form.getlist('org_ids')
 
-        # 1. Вставляем само мероприятие
+        
         cursor.execute("""
             INSERT INTO events (program_id, item_number, name, deadline)
             VALUES (%s, %s, %s, %s)
         """, (program_id, item_number, name, deadline))
         
-        event_id = cursor.lastrowid # Получаем ID только что созданной записи
+        event_id = cursor.lastrowid 
 
-        # 2. Связываем мероприятие с выбранными организациями в таблице event_organizations
+        
         if org_ids:
             for o_id in org_ids:
                 cursor.execute("""
@@ -320,7 +320,7 @@ def manage_events():
         flash('Täze çäre üstünlikli goşuldy', 'success')
         return redirect(url_for('admin.manage_events'))
 
-    # ОБНОВЛЕННЫЙ ЗАПРОС: добавили GROUP_CONCAT(o.id) as org_ids_list
+    
     cursor.execute("""
         SELECT 
             e.*, 
@@ -336,7 +336,7 @@ def manage_events():
     """)
     events = cursor.fetchall()
     
-    # Загружаем списки для выпадающих меню в модальном окне
+    
     cursor.execute("SELECT id, name FROM programs WHERE status = 'active' ORDER BY name ASC")
     programs = cursor.fetchall()
     
@@ -357,18 +357,18 @@ def update_event():
     item_number = request.form.get('item_number')
     name = request.form.get('name')
     deadline = request.form.get('deadline')
-    org_ids = request.form.getlist('org_ids') # Список выбранных ID
+    org_ids = request.form.getlist('org_ids') 
 
     if event_id:
         conn = get_db_connection()
         cursor = conn.cursor()
-        # 1. Обновляем основные данные мероприятия
+        
         cursor.execute("""
             UPDATE events SET program_id=%s, item_number=%s, name=%s, deadline=%s
             WHERE id=%s
         """, (program_id, item_number, name, deadline, event_id))
         
-        # 2. Обновляем связи с организациями (удаляем старые и пишем новые)
+        
         cursor.execute("DELETE FROM event_organizations WHERE event_id=%s", (event_id,))
         for o_id in org_ids:
             cursor.execute("INSERT INTO event_organizations (event_id, organization_id) VALUES (%s, %s)", (event_id, o_id))
@@ -491,3 +491,110 @@ def toggle_failure_reason(id):
     conn.close()
     return redirect(url_for('admin.manage_failure_reasons'))
 
+from werkzeug.security import generate_password_hash
+
+#------------------------- Ulanyjylar--------------------------------------------------------
+
+from werkzeug.security import generate_password_hash
+
+@admin_bp.route('/users', methods=['GET', 'POST'])
+@roles_required('admin')
+def manage_users():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    if request.method == 'POST':
+        full_name = request.form.get('full_name').strip()
+        username = request.form.get('username').strip()
+        password = request.form.get('password')
+        phone = request.form.get('phone').strip()
+        role = request.form.get('role')
+        order_number = request.form.get('order_number')
+        order_date = request.form.get('order_date') or None
+        org_id = request.form.get('organization_id')
+
+        hashed_pw = generate_password_hash(password)
+
+        try:
+            cursor.execute("""
+                INSERT INTO users (full_name, username, password_hash, phone, order_number, order_date, role, is_verified) 
+                VALUES (%s, %s, %s, %s, %s, %s, %s, 1)
+            """, (full_name, username, hashed_pw, phone, order_number, order_date, role))
+            
+            user_id = cursor.lastrowid
+            if org_id:
+                cursor.execute("INSERT INTO user_organizations (user_id, organization_id) VALUES (%s, %s)", (user_id, org_id))
+            
+            conn.commit()
+            flash('Ulanyjy üstünlikli hasaba alyndy', 'success')
+        except Exception as e:
+            flash(f'Ýalňyşlyk: {str(e)}', 'danger')
+        return redirect(url_for('admin.manage_users'))
+
+    cursor.execute("""
+        SELECT u.*, o.name as org_name, o.id as org_id
+        FROM users u
+        LEFT JOIN user_organizations uo ON u.id = uo.user_id AND uo.is_main = 1
+        LEFT JOIN organizations o ON uo.organization_id = o.id
+        ORDER BY u.created_at DESC
+    """)
+    users = cursor.fetchall()
+
+    cursor.execute("SELECT id, name FROM organizations WHERE status = 'active' ORDER BY name")
+    organizations = cursor.fetchall()
+    
+    conn.close()
+    return render_template('admin/users.html', users=users, organizations=organizations)
+
+@admin_bp.route('/users/update', methods=['POST'])
+@roles_required('admin')
+def update_user():
+    user_id = request.form.get('id')
+    full_name = request.form.get('full_name').strip()
+    username = request.form.get('username').strip()
+    phone = request.form.get('phone').strip()
+    role = request.form.get('role')
+    order_number = request.form.get('order_number')
+    order_date = request.form.get('order_date') or None
+    org_id = request.form.get('organization_id')
+    new_password = request.form.get('password')
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    if new_password:
+        hashed_pw = generate_password_hash(new_password)
+        cursor.execute("""
+            UPDATE users SET full_name=%s, username=%s, phone=%s, role=%s, 
+            order_number=%s, order_date=%s, password_hash=%s WHERE id=%s
+        """, (full_name, username, phone, role, order_number, order_date, hashed_pw, user_id))
+    else:
+        cursor.execute("""
+            UPDATE users SET full_name=%s, username=%s, phone=%s, role=%s, 
+            order_number=%s, order_date=%s WHERE id=%s
+        """, (full_name, username, phone, role, order_number, order_date, user_id))
+
+    cursor.execute("DELETE FROM user_organizations WHERE user_id=%s", (user_id,))
+    if org_id:
+        cursor.execute("INSERT INTO user_organizations (user_id, organization_id) VALUES (%s, %s)", (user_id, org_id))
+    
+    conn.commit()
+    conn.close()
+    flash('Ulanyjy maglumatlary täzelendi', 'success')
+    return redirect(url_for('admin.manage_users'))
+
+@admin_bp.route('/users/toggle/<int:id>', methods=['POST'])
+@roles_required('admin')
+def toggle_user_status(id):
+    conn = get_db_connection()
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT status FROM users WHERE id=%s", (id,))
+        u = cursor.fetchone()
+        if u:
+            # Меняем статус на противоположный
+            new_status = 'blocked' if u['status'] == 'active' else 'active'
+            cursor.execute("UPDATE users SET status=%s WHERE id=%s", (new_status, id))
+            conn.commit()
+            flash(f'Ulanyjynyň statusy üýtgedildi: {new_status}', 'info')
+    conn.close()
+    return redirect(url_for('admin.manage_users'))

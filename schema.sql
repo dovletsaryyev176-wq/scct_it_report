@@ -12,6 +12,22 @@ CREATE TABLE users (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+ALTER TABLE users 
+ADD COLUMN full_name VARCHAR(255) AFTER username,
+ADD COLUMN order_number VARCHAR(100) AFTER phone,
+ADD COLUMN order_date DATE AFTER order_number,
+ADD COLUMN status ENUM('active', 'blocked') DEFAULT 'active' AFTER role;
+
+CREATE TABLE IF NOT EXISTS user_organizations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    organization_id INT NOT NULL,
+    is_main TINYINT(1) DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+);
+
 -- Welaýatlar
 CREATE TABLE cities (
     id INT AUTO_INCREMENT PRIMARY KEY,

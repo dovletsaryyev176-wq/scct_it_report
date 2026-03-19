@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold text-dark mb-0">Ulanyjylar</h3>
+        <p class="text-muted small">Jogapkär şahsyýetleriň we administratorlaryň sanawy</p>
+    </div>
+    <button class="btn btn-success shadow-sm px-4" data-bs-toggle="modal" data-bs-target="#addUserModal">+ Täze ulanyjy</button>
+</div>
+
+<div class="table-responsive bg-white rounded-4 shadow-sm border-0">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light border-bottom text-uppercase small text-secondary">
+            <tr>
+                <th class="px-4 py-3">F.Atasy.Ady / Login</th>
+                <th class="py-3">Edarasy / Buýruk</th>
+                <th class="py-3">Roly</th>
+                <th class="py-3">Status</th>
+                <th class="text-end px-4 py-3">Amallar</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in users %}
+            <tr>
+                <td class="px-4">
+                    <div class="fw-bold text-dark">{{ u.full_name }}</div>
+                    <small class="text-muted">@{{ u.username }} | {{ u.phone or '-' }}</small>
+                </td>
+                <td>
+                    <div class="small fw-bold text-primary">{{ u.org_name or '---' }}</div>
+                    <small class="text-muted">№{{ u.order_number or '-' }} ({{ u.order_date or '-' }})</small>
+                </td>
+                <td>
+                    <span class="badge {{ 'bg-primary' if u.role == 'admin' else 'bg-info text-dark' }} rounded-pill small">
+                        {{ u.role }}
+                    </span>
+                </td>
+                <td>
+                    <span class="badge {{ 'bg-success-subtle text-success' if u.status == 'active' else 'bg-danger-subtle text-danger' }} px-3 py-2 rounded-pill">
+                        {{ 'Işjeň' if u.status == 'active' else 'Bloklanan' }}
+                    </span>
+                </td>
+                <td class="text-end px-4">
+                    <div class="d-flex justify-content-end gap-2">
+                        <button class="btn btn-sm btn-outline-success px-3" 
+                                onclick="editUser('{{u.id}}', '{{u.full_name}}', '{{u.username}}', '{{u.phone}}', '{{u.role}}', '{{u.org_id or ''}}', '{{u.order_number or ''}}', '{{u.order_date or ''}}')" 
+                                data-bs-toggle="modal" data-bs-target="#editUserModal">Üýtgetmek</button>
+                        <form action="{{ url_for('admin.toggle_user_status', id=u.id) }}" method="POST" class="m-0">
+                            <button class="btn btn-sm {{ 'btn-outline-danger' if u.status == 'active' else 'btn-outline-primary' }} px-3">
+                                {{ 'Blok' if u.status == 'active' else 'Aç' }}
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="modal fade" id="addUserModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <form method="POST" class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-0 pb-0"><h5>Täze ulanyjy goşmak</h5></div>
+            <div class="modal-body py-4 row g-3">
+                <div class="col-md-8"><label class="small fw-bold text-secondary">Doly ady (F.Atasy.Ady)</label><input type="text" name="full_name" class="form-control bg-light border-0" required></div>
+                <div class="col-md-4"><label class="small fw-bold text-secondary">Ulanyjy ady (Login)</label><input type="text" name="username" class="form-control bg-light border-0" required></div>
+                
+                <div class="col-md-4"><label class="small fw-bold text-secondary">Parol</label><input type="password" name="password" class="form-control bg-light border-0" required></div>
+                <div class="col-md-4"><label class="small fw-bold text-secondary">Telefon</label><input type="text" name="phone" class="form-control bg-light border-0"></div>
+                <div class="col-md-4">
+    <label class="small fw-bold text-secondary">Roly</label>
+    <select name="role" class="form-select bg-light border-0">
+        <option value="user">Ulanyjy (User)</option>
+        <option value="company_user">Edara işgäri (Company User)</option>
+        <option value="admin">Administrator (Admin)</option>
+    </select>
+</div>
+
+                <div class="col-md-4"><label class="small fw-bold text-secondary">Degişli edarasy</label>
+                    <select name="organization_id" class="form-select bg-light border-0">
+                        <option value="">Saýlawy ýok</option>
+                        {% for o in organizations %}<option value="{{o.id}}">{{o.name}}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4"><label class="small fw-bold text-secondary">Buýruk belgisi</label><input type="text" name="order_number" class="form-control bg-light border-0"></div>
+                <div class="col-md-4"><label class="small fw-bold text-secondary">Buýruk senesi</label><input type="date" name="order_date" class="form-control bg-light border-0"></div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Yza</button>
+                <button type="submit" class="btn btn-success px-4">Hasaba al</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="editUserModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <form action="{{ url_for('admin.update_user') }}" method="POST" class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-0 pb-0"><h5>Maglumatlary üýtgetmek</h5></div>
+            <div class="modal-body py-4 row g-3">
+                <input type="hidden" name="id" id="edit-id">
+                <div class="col-md-8"><label class="small fw-bold text-secondary">Doly ady</label><input type="text" name="full_name" id="edit-fullname" class="form-control bg-light border-0" required></div>
+                <div class="col-md-4"><label class="small fw-bold text-secondary">Login</label><input type="text" name="username" id="edit-username" class="form-control bg-light border-0" required></div>
+                
+                <div class="col-md-4"><label class="small fw-bold text-secondary text-danger">Täze parol (boş goýsaňyz üýtgemez)</label><input type="password" name="password" class="form-control bg-light border-0"></div>
+                <div class="col-md-4"><label class="small fw-bold text-secondary">Telefon</label><input type="text" name="phone" id="edit-phone" class="form-control bg-light border-0"></div>
+                <div class="col-md-4">
+    <label class="small fw-bold text-secondary">Roly</label>
+    <select name="role" id="edit-role" class="form-select bg-light border-0">
+        <option value="user">Ulanyjy (User)</option>
+        <option value="company_user">Edara işgäri (Company User)</option>
+        <option value="admin">Administrator (Admin)</option>
+    </select>
+</div>
+
+                <div class="col-md-4"><label class="small fw-bold text-secondary">Edarasy</label>
+                    <select name="organization_id" id="edit-org" class="form-select bg-light border-0">
+                        <option value="">Saýlawy ýok</option>
+                        {% for o in organizations %}<option value="{{o.id}}">{{o.name}}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4"><label class="small fw-bold text-secondary">Buýruk belgisi</label><input type="text" name="order_number" id="edit-onum" class="form-control bg-light border-0"></div>
+                <div class="col-md-4"><label class="small fw-bold text-secondary">Buýruk senesi</label><input type="date" name="order_date" id="edit-odate" class="form-control bg-light border-0"></div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Yza</button>
+                <button type="submit" class="btn btn-success px-4">Täzele</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function editUser(id, fullname, username, phone, role, org, onum, odate) {
+    document.getElementById('edit-id').value = id;
+    document.getElementById('edit-fullname').value = fullname;
+    document.getElementById('edit-username').value = username;
+    document.getElementById('edit-phone').value = phone;
+    document.getElementById('edit-role').value = role;
+    document.getElementById('edit-org').value = org;
+    document.getElementById('edit-onum').value = onum;
+    document.getElementById('edit-odate').value = odate;
+}
+</script>
+{% endblock %}
