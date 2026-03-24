@@ -7,7 +7,7 @@
 
 <div class="table-responsive bg-white rounded-4 shadow-sm border-0">
     <table class="table table-hover align-middle mb-0">
-        <thead class="border-bottom" style="border-width: 2px !important;">
+        <thead class="table-light border-bottom">
             <tr>
                 <th class="text-secondary text-uppercase small px-4 py-3">Ýagdaýyň görnüşiniň ady</th>
                 <th class="text-secondary text-uppercase small py-3">Ulgama goşulan wagty</th>
@@ -19,7 +19,8 @@
             {% for s in statuses %}
             <tr>
                 <td class="px-4"><strong>{{ s.name }}</strong></td>
-                <td class="text-muted small">{{ s.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                <td class="text-muted small">{{ s.created_at.strftime('%d.%m.%Y %H:%M') }}<br>
+                    <span style="font-size: 0.8em;">(Täzelendi: {{s.updated_at.strftime('%d.%m.%Y %H:%M') }})</span></td>
                 <td>
                     <span class="badge {{ 'bg-success-subtle text-success' if s.status == 'active' else 'bg-danger-subtle text-danger' }} px-3 py-2 rounded-pill">
                         {{ 'Işjeň' if s.status == 'active' else 'Bloklanan' }}

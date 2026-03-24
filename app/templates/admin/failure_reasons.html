@@ -19,7 +19,8 @@
             {% for r in reasons %}
             <tr>
                 <td class="px-4"><strong>{{ r.name }}</strong></td>
-                <td class="text-muted small">{{ r.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                <td class="text-muted small">{{ r.created_at.strftime('%d.%m.%Y %H:%M') }}<br>
+                    <span style="font-size: 0.8em;">(Täzelendi: {{r.updated_at.strftime('%d.%m.%Y %H:%M') }})</span></td>
                 <td>
                     <span class="badge {{ 'bg-success-subtle text-success' if r.status == 'active' else 'bg-danger-subtle text-danger' }} px-3 py-2 rounded-pill">
                         {{ 'Işjeň' if r.status == 'active' else 'Bloklanan' }}

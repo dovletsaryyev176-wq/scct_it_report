@@ -1,4 +1,3 @@
--- Ulanyjylar
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
@@ -28,7 +27,6 @@ CREATE TABLE IF NOT EXISTS user_organizations (
     FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
 );
 
--- Welaýatlar
 CREATE TABLE cities (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -37,7 +35,6 @@ CREATE TABLE cities (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Etraplar we şäherler
 CREATE TABLE districts (
     id INT AUTO_INCREMENT PRIMARY KEY,
     city_id INT NOT NULL,
@@ -48,7 +45,6 @@ CREATE TABLE districts (
     FOREIGN KEY (city_id) REFERENCES cities(id) ON DELETE CASCADE
 );
 
--- Edaralar
 CREATE TABLE organizations (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -65,33 +61,30 @@ CREATE TABLE organizations (
     FOREIGN KEY (district_id) REFERENCES districts(id)
 );
 
--- Maksatnamalar
 CREATE TABLE programs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(500) NOT NULL,
-    order_date DATE,            -- tassyklanan senesi
-    order_number VARCHAR(100),   -- belgisi
-    start_date DATE,            -- başlanýan senesi
-    end_date DATE,              -- tamamlanýan senesi
+    order_date DATE,           
+    order_number VARCHAR(100), 
+    start_date DATE,           
+    end_date DATE,             
     status ENUM('active', 'blocked') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Çäreler
 CREATE TABLE events (
     id INT AUTO_INCREMENT PRIMARY KEY,
     program_id INT NOT NULL,
-    item_number VARCHAR(50),    -- tertip belgisi
-    name TEXT NOT NULL,         -- çäräniň ady
-    deadline VARCHAR(255),      -- ýerine ýetirilmeli möhleti
+    item_number VARCHAR(50),   
+    name TEXT NOT NULL,      
+    deadline VARCHAR(255),     
     status ENUM('active', 'blocked') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE
 );
 
--- Maksatnamalary we çäreleri baglamak
 CREATE TABLE event_organizations (
     event_id INT NOT NULL,
     organization_id INT NOT NULL,
@@ -102,7 +95,6 @@ CREATE TABLE event_organizations (
     FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
 );
 
--- Çäräniň ýagdaýlarynyň görnüşi (Статусы выполнения)
 CREATE TABLE event_statuses (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -111,7 +103,6 @@ CREATE TABLE event_statuses (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Ýerine ýetirilmezliginiň sebäpleri (Причины невыполнения)
 CREATE TABLE failure_reasons (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,

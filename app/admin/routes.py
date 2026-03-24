@@ -1,12 +1,16 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from app.auth import roles_required
 from app import get_db_connection 
+from werkzeug.security import generate_password_hash
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
+
+
 #------------------------- Welaýatlar--------------------------------------------------------
 
-#Welaýatlar barada maglumat almak we täze welaýaty goşmak
+
+
 @admin_bp.route('/cities', methods=['GET', 'POST'])
 @roles_required('admin')
 def manage_cities():
@@ -27,7 +31,7 @@ def manage_cities():
     return render_template('admin/cities.html', cities=cities)
 
 
-#Welaýaty bloklamak we blokdan açmak
+
 @admin_bp.route('/cities/toggle/<int:city_id>', methods=['POST'])
 @roles_required('admin')
 def toggle_city_status(city_id):
@@ -44,7 +48,7 @@ def toggle_city_status(city_id):
     return redirect(url_for('admin.manage_cities'))
 
 
-#Welaýatyň adyny üýtgetmek
+
 @admin_bp.route('/cities/update', methods=['POST'])
 @roles_required('admin')
 def update_city():
@@ -63,9 +67,13 @@ def update_city():
         
     return redirect(url_for('admin.manage_cities'))
 
+
+
+
 #------------------------- Etraplar--------------------------------------------------------
 
-#Etraby ýa-da şäheri hasaba almak we maglumatlaryny gaýtarmak
+
+
 @admin_bp.route('/districts', methods=['GET', 'POST'])
 @roles_required('admin')
 def manage_districts():
@@ -98,7 +106,7 @@ def manage_districts():
     return render_template('admin/districts.html', districts=districts, cities=cities)
 
 
-#Etrap ýa-da şäher boýunça maglumatlary täzelemek
+
 @admin_bp.route('/districts/update', methods=['POST'])
 @roles_required('admin')
 def update_district():
@@ -114,11 +122,11 @@ def update_district():
                            (name, city_id, dist_id))
             conn.commit()
         conn.close()
-        flash('Etrap maglumatlary täzelendi', 'success')
+        flash('Etrap ýa-da şäher maglumatlary täzelendi', 'success')
     return redirect(url_for('admin.manage_districts'))
 
 
-#Etraby ýa-da şäheri bloklamak
+
 @admin_bp.route('/districts/toggle/<int:dist_id>', methods=['POST'])
 @roles_required('admin')
 def toggle_district_status(dist_id):
@@ -130,13 +138,17 @@ def toggle_district_status(dist_id):
             new_status = 'blocked' if dist['status'] == 'active' else 'active'
             cursor.execute("UPDATE districts SET status = %s WHERE id = %s", (new_status, dist_id))
             conn.commit()
-            flash(f'Etrabyň statusy "{new_status}" edildi', 'info')
+            flash(f'Etrabyň ýa-da şäheriň ýagdaýy  "{new_status}" edildi', 'info')
     conn.close()
     return redirect(url_for('admin.manage_districts'))
 
+
+
 #------------------------- Edaralar--------------------------------------------------------
 
-#Täze edara döretmek we maglumatlaryny almak
+
+
+
 @admin_bp.route('/organizations', methods=['GET', 'POST'])
 @roles_required('admin')
 def manage_organizations():
@@ -187,7 +199,7 @@ def manage_organizations():
                            districts=districts, parent_orgs=parent_orgs)
 
 
-#Edara boýunça maglumatlary täzelemek
+
 @admin_bp.route('/organizations/update', methods=['POST'])
 @roles_required('admin')
 def update_organization():
@@ -213,7 +225,7 @@ def update_organization():
     return redirect(url_for('admin.manage_organizations'))
 
 
-#Edarany bloklamak we blokdan açmak
+
 @admin_bp.route('/organizations/toggle/<int:org_id>', methods=['POST'])
 @roles_required('admin')
 def toggle_org_status(org_id):
@@ -225,13 +237,17 @@ def toggle_org_status(org_id):
             new_status = 'blocked' if org['status'] == 'active' else 'active'
             cursor.execute("UPDATE organizations SET status = %s WHERE id = %s", (new_status, org_id))
             conn.commit()
-            flash(f'Edaranyň statusy "{new_status}" edildi', 'info')
+            flash(f'Edaranyň ýagdaýy "{new_status}" edildi', 'info')
     conn.close()
     return redirect(url_for('admin.manage_organizations'))
 
+
+
+
 #------------------------- Maksatnamalar--------------------------------------------------------
 
-#Döwlet maksatnamalary goşmak we maglumatlaryny almak
+
+
 @admin_bp.route('/programs', methods=['GET', 'POST'])
 @roles_required('admin')
 def manage_programs():
@@ -253,7 +269,7 @@ def manage_programs():
     return render_template('admin/programs.html', programs=programs)
 
 
-#Döwlet maksatnamalary barada maglumatlary üýtgetmek
+
 @admin_bp.route('/programs/update', methods=['POST'])
 @roles_required('admin')
 def update_program():
@@ -266,11 +282,11 @@ def update_program():
               request.form['start_date'], request.form['end_date'], request.form['id']))
         conn.commit()
     conn.close()
-    flash('Maksatnama täzelendi', 'success')
+    flash('Döwlet maksatnamasy boýunça maglumatlar täzelendi', 'success')
     return redirect(url_for('admin.manage_programs'))
 
 
-#Döwlet maksatnamalary bloklamak we blokdan açmak
+
 @admin_bp.route('/programs/toggle/<int:id>', methods=['POST'])
 @roles_required('admin')
 def toggle_program_status(id):
@@ -284,9 +300,14 @@ def toggle_program_status(id):
     conn.close()
     return redirect(url_for('admin.manage_programs'))
 
+
+
+
 #------------------------- Çäreler--------------------------------------------------------
 
-#Çäreleri döretmek we maglumatlaryny almak
+
+
+
 @admin_bp.route('/events', methods=['GET', 'POST'])
 @roles_required('admin')
 def manage_events():
@@ -349,6 +370,9 @@ def manage_events():
                            programs=programs, 
                            organizations=organizations)
 
+
+
+
 @admin_bp.route('/events/update', methods=['POST'])
 @roles_required('admin')
 def update_event():
@@ -375,8 +399,9 @@ def update_event():
         
         conn.commit()
         conn.close()
-        flash('Çäre maglumatlary täzelendi', 'success')
+        flash('Çärä degişli maglumatlar täzelendi', 'success')
     return redirect(url_for('admin.manage_events'))
+
 
 
 @admin_bp.route('/events/toggle/<int:id>', methods=['POST'])
@@ -393,7 +418,11 @@ def toggle_event_status(id):
     conn.close()
     return redirect(url_for('admin.manage_events'))
 
+
+
 #------------------------- Çäräniň ýagdaýlary--------------------------------------------------------
+
+
 
 @admin_bp.route('/event-statuses', methods=['GET', 'POST'])
 @roles_required('admin')
@@ -414,6 +443,7 @@ def manage_event_statuses():
     return render_template('admin/event_statuses.html', statuses=statuses)
 
 
+
 @admin_bp.route('/event-statuses/update', methods=['POST'])
 @roles_required('admin')
 def update_event_status():
@@ -429,6 +459,7 @@ def update_event_status():
     return redirect(url_for('admin.manage_event_statuses'))
 
 
+
 @admin_bp.route('/event-statuses/toggle/<int:id>', methods=['POST'])
 @roles_required('admin')
 def toggle_event_type_status(id):
@@ -442,7 +473,12 @@ def toggle_event_type_status(id):
     conn.close()
     return redirect(url_for('admin.manage_event_statuses'))
 
+
+
+
 #------------------------- Sebäpler--------------------------------------------------------
+
+
 
 @admin_bp.route('/failure-reasons', methods=['GET', 'POST'])
 @roles_required('admin')
@@ -463,6 +499,7 @@ def manage_failure_reasons():
     return render_template('admin/failure_reasons.html', reasons=reasons)
 
 
+
 @admin_bp.route('/failure-reasons/update', methods=['POST'])
 @roles_required('admin')
 def update_failure_reason():
@@ -478,6 +515,7 @@ def update_failure_reason():
     return redirect(url_for('admin.manage_failure_reasons'))
 
 
+
 @admin_bp.route('/failure-reasons/toggle/<int:id>', methods=['POST'])
 @roles_required('admin')
 def toggle_failure_reason(id):
@@ -491,11 +529,11 @@ def toggle_failure_reason(id):
     conn.close()
     return redirect(url_for('admin.manage_failure_reasons'))
 
-from werkzeug.security import generate_password_hash
+
 
 #------------------------- Ulanyjylar--------------------------------------------------------
 
-from werkzeug.security import generate_password_hash
+
 
 @admin_bp.route('/users', methods=['GET', 'POST'])
 @roles_required('admin')
@@ -546,6 +584,8 @@ def manage_users():
     conn.close()
     return render_template('admin/users.html', users=users, organizations=organizations)
 
+
+
 @admin_bp.route('/users/update', methods=['POST'])
 @roles_required('admin')
 def update_user():
@@ -583,6 +623,8 @@ def update_user():
     flash('Ulanyjy maglumatlary täzelendi', 'success')
     return redirect(url_for('admin.manage_users'))
 
+
+
 @admin_bp.route('/users/toggle/<int:id>', methods=['POST'])
 @roles_required('admin')
 def toggle_user_status(id):
@@ -591,10 +633,11 @@ def toggle_user_status(id):
         cursor.execute("SELECT status FROM users WHERE id=%s", (id,))
         u = cursor.fetchone()
         if u:
-            # Меняем статус на противоположный
+            
             new_status = 'blocked' if u['status'] == 'active' else 'active'
             cursor.execute("UPDATE users SET status=%s WHERE id=%s", (new_status, id))
             conn.commit()
-            flash(f'Ulanyjynyň statusy üýtgedildi: {new_status}', 'info')
+            flash(f'Ulanyjynyň ýagdaýy üýtgedildi: {new_status}', 'info')
     conn.close()
     return redirect(url_for('admin.manage_users'))
+

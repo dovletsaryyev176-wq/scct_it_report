@@ -7,13 +7,13 @@
 
 <div class="table-responsive bg-white rounded shadow-sm">
     <table class="table table-hover align-middle mb-0">
-        <thead class="border-bottom" style="border-width: 2px !important;">
+        <thead class="table-light border-bottom">
             <tr>
-                <th>Ady</th>
-                <th>Degişli edarasy</th>
-                <th>Welaýat / Etrap</th>
+                <th>Edaranyň ady</th>
+                <th>Ýokarky edarasy</th>
+                <th>Welaýat / Etrap / Şäher</th>
                 <th>Ýagdaýy</th>
-                <th>Telefon</th>
+                <th>Telefon belgisi</th>
                 <th class="text-end">Amallar</th>
             </tr>
         </thead>
@@ -59,7 +59,7 @@
 </div>
 
 <div class="modal fade" id="addOrgModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <form method="POST" class="modal-content border-0 shadow">
             <div class="modal-header bg-success text-white">
                 <h5 class="modal-title">Täze edara hasaba almak</h5>
@@ -137,7 +137,7 @@ function filterDistricts() {
 
 
 <div class="modal fade" id="editOrgModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <form action="{{ url_for('admin.update_organization') }}" method="POST" class="modal-content border-0 shadow">
             <div class="modal-header bg-success text-white">
                 <h5 class="modal-title">Edaralar barada maglumatlary üýtgetmek</h5>
@@ -202,9 +202,9 @@ function editOrg(id, name, parentId, cityId, districtId, address, phone) {
     document.getElementById('edit-org-address').value = address;
     document.getElementById('edit-org-phone').value = phone;
     
-    // Сначала фильтруем районы для выбранного города
+
     filterDistrictsEdit();
-    // Затем устанавливаем нужный район
+
     document.getElementById('edit-org-district').value = districtId;
 }
 
