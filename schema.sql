@@ -110,3 +110,13 @@ CREATE TABLE failure_reasons (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+CREATE TABLE program_reports (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    program_id INT NOT NULL,
+    report_type ENUM('gündelik', 'hepdeleýin', 'aýlyk', 'çärýeklik', 'ýyllyk') NOT NULL,
+    status ENUM('active', 'blocked') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE
+);

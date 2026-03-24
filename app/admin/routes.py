@@ -641,3 +641,82 @@ def toggle_user_status(id):
     conn.close()
     return redirect(url_for('admin.manage_users'))
 
+
+
+#------------------------- Maksatnamalary tabshyrmagyn wagtlary--------------------------------------------------------
+
+
+
+@admin_bp.route('/program-reports', methods=['GET', 'POST'])
+@roles_required('admin')
+def manage_program_reports():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    if request.method == 'POST':
+        program_id = request.form.get('program_id')
+        report_type = request.form.get('report_type')
+
+        try:
+            cursor.execute("""
+                INSERT INTO program_reports (program_id, report_type) 
+                VALUES (%s, %s)
+            """, (program_id, report_type))
+            conn.commit()
+            flash('Hasabatlylyk düzümi goşuldy', 'success')
+        except Exception as e:
+            flash(f'Ýalňyşlyk: {str(e)}', 'danger')
+        return redirect(url_for('admin.manage_program_reports'))
+
+    
+    cursor.execute("""
+        SELECT pr.*, p.name as program_name 
+        FROM program_reports pr
+        JOIN programs p ON pr.program_id = p.id
+        ORDER BY p.name ASC
+    """)
+    reports = cursor.fetchall()
+
+    
+    cursor.execute("SELECT id, name FROM programs WHERE status = 'active'")
+    programs = cursor.fetchall()
+
+    conn.close()
+    return render_template('admin/program_reports.html', reports=reports, programs=programs)
+
+
+
+
+@admin_bp.route('/program-reports/update', methods=['POST'])
+@roles_required('admin')
+def update_program_report():
+    report_id = request.form.get('id')
+    program_id = request.form.get('program_id')
+    report_type = request.form.get('report_type')
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE program_reports SET program_id=%s, report_type=%s WHERE id=%s
+    """, (program_id, report_type, report_id))
+    conn.commit()
+    conn.close()
+    flash('Maglumat täzelendi', 'success')
+    return redirect(url_for('admin.manage_program_reports'))
+
+
+
+
+@admin_bp.route('/program-reports/toggle/<int:id>', methods=['POST'])
+@roles_required('admin')
+def toggle_report_status(id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT status FROM program_reports WHERE id=%s", (id,))
+    r = cursor.fetchone()
+    if r:
+        new_status = 'blocked' if r['status'] == 'active' else 'active'
+        cursor.execute("UPDATE program_reports SET status=%s WHERE id=%s", (new_status, id))
+        conn.commit()
+    conn.close()
+    return redirect(url_for('admin.manage_program_reports'))
