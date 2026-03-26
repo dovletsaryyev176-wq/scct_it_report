@@ -5,8 +5,6 @@ from werkzeug.security import generate_password_hash
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
-
-
 #------------------------- Welaýatlar--------------------------------------------------------
 
 

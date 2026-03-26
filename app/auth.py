@@ -6,7 +6,7 @@ from functools import wraps
 auth_bp = Blueprint('auth', __name__)
 
 
-#hökman admin derejeli bolmalylar üçin
+
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -17,7 +17,17 @@ def admin_required(f):
     return decorated_function
 
 
-#belli bir ulanyjy görnüşliler üçin
+
+def client_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session or session.get('role') not in ['user']:
+            flash('Bu bölüme girmek üçin öz hasabyňyza giriň', 'danger')
+            return redirect(url_for('auth.login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
 def roles_required(*roles):
     def wrapper(f):
         @wraps(f)
@@ -33,36 +43,56 @@ def roles_required(*roles):
     return wrapper
 
 
-#Ulgama girmek
+
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     from app import get_db_connection
+    
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
         
         conn = get_db_connection()
         with conn.cursor() as cursor:
-            cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
+           
+            cursor.execute("""
+                SELECT u.*, uo.organization_id 
+                FROM users u
+                LEFT JOIN user_organizations uo ON u.id = uo.user_id AND uo.is_main = 1
+                WHERE u.username = %s
+            """, (username,))
             user = cursor.fetchone()
         conn.close()
 
         if user and check_password_hash(user['password_hash'], password):
+            
+            if user['status'] == 'blocked':
+                flash('Siziň hasabyňyz bloklanan. Adminstrator bilen habarlaşyň.', 'danger')
+                return redirect(url_for('auth.login'))
+
             session.clear()
             session['user_id'] = user['id']
             session['username'] = user['username']
+            session['full_name'] = user['full_name'] 
             session['role'] = user['role']
-            flash(f'Salam, {username}!', 'success')
-            return redirect(url_for('admin.manage_cities'))
+            session['org_id'] = user['organization_id']
+
+            flash(f'Salam, {user["full_name"]}!', 'success')
+
+            
+            if user['role'] == 'admin':
+                return redirect(url_for('admin.manage_cities'))
+            else:
+                return redirect(url_for('client.dashboard'))
         
         flash('Nädogry ulanyjy ady ýa-da gizlin belgisi', 'danger')
+        
     return render_template('login.html')
 
 
-#Ulgamdan çykmak
+
 @auth_bp.route('/logout')
 def logout():
     session.clear()
-    flash('Siz ulgamdan üstünikli çykdyňyz', 'info')
+    flash('Siz ulgamdan üstünlikli çykdyňyz', 'info')
     return redirect(url_for('auth.login'))
-

@@ -120,3 +120,37 @@ CREATE TABLE program_reports (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE
 );
+
+CREATE TABLE reports (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    organization_id INT NOT NULL,
+    event_id INT NOT NULL,
+    program_report_id INT NOT NULL, -- Ссылка на правило (ежедневно, ежемесячно и т.д.)
+    report_period VARCHAR(50) NOT NULL, -- Значение периода (например, "2026-03" или "2026-Q1")
+    status_id INT NOT NULL, -- Из таблицы event_statuses
+    failure_reason_id INT NULL, -- Из failure_reasons (если не выполнено)
+    description TEXT, -- Текстовый комментарий
+    created_user_id INT NOT NULL, -- Кто именно нажал кнопку "Отправить"
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (organization_id) REFERENCES organizations(id),
+    FOREIGN KEY (event_id) REFERENCES events(id),
+    FOREIGN KEY (program_report_id) REFERENCES program_reports(id),
+    FOREIGN KEY (status_id) REFERENCES event_statuses(id),
+    FOREIGN KEY (failure_reason_id) REFERENCES failure_reasons(id),
+    FOREIGN KEY (created_user_id) REFERENCES users(id),
+    
+    -- Защита от дублей: одна организация -> одно мероприятие -> один период = один отчет
+    UNIQUE KEY unique_report_period (organization_id, event_id, report_period)
+);
+
+CREATE TABLE report_files (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    report_id INT NOT NULL,
+    file_path VARCHAR(500) NOT NULL, -- Путь к файлу на сервере
+    original_name VARCHAR(255) NOT NULL, -- Исходное имя файла (для красоты)
+    file_type ENUM('document', 'photo') NOT NULL, -- Разделение на док и фото
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (report_id) REFERENCES reports(id) ON DELETE CASCADE
+);
