@@ -13,7 +13,15 @@
     </div>
 
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="fw-bold text-dark mb-0">Meniň hasabatlarym</h4>
+        <div class="btn-group shadow-sm rounded-3 bg-white p-1">
+            <a href="{{ url_for('client.dashboard') }}" class="btn btn-success rounded-3 px-3 active">
+                <i class="bi bi-list-check me-1"></i> Aktiw çäreler
+            </a>
+            <a href="{{ url_for('client.archive') }}" class="btn btn-light rounded-3 px-3 text-secondary">
+                <i class="bi bi-archive me-1"></i> Arhiw
+            </a>
+        </div>
+        
         <span class="badge bg-white text-dark border px-3 py-2 rounded-pill shadow-sm">
             Jemi çäreler: {{ events|length }}
         </span>
@@ -27,6 +35,7 @@
                         <th class="px-4 py-3" style="width: 80px;">№</th>
                         <th class="py-3">Maksatnama</th>
                         <th class="py-3">Çäräniň ady</th>
+                        <th class="py-3">Hasabat döwri</th>
                         <th class="py-3">Möhleti</th>
                         <th class="text-end px-4 py-3">Amal</th>
                     </tr>
@@ -39,6 +48,14 @@
                         </td>
                         <td class="small text-muted">{{ e.program_name }}</td>
                         <td class="fw-semibold text-dark">{{ e.event_name }}</td>
+                        
+                        <td>
+                            <span class="badge bg-light text-primary border rounded-pill px-3 py-2">
+                                <i class="bi bi-clock-history me-1"></i> {{ e.current_period }} 
+                                <small class="text-secondary">({{ e.report_type }})</small>
+                            </span>
+                        </td>
+
                         <td>
                             <div class="d-flex align-items-center text-danger small">
                                 <i class="bi bi-calendar-event me-2"></i>
@@ -47,13 +64,13 @@
                         </td>
                         <td class="text-end px-4">
                             <a href="{{ url_for('client.new_report', event_id=e.id) }}" class="btn btn-sm btn-success px-3 rounded-3 shadow-sm">
-    <i class="bi bi-plus-circle me-1"></i> Hasabat ber
-</a>
+                                <i class="bi bi-plus-circle me-1"></i> Hasabat ber
+                            </a>
                         </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="5" class="text-center py-5 text-muted">
+                        <td colspan="6" class="text-center py-5 text-muted">
                             <i class="bi bi-clipboard-x display-4 mb-3 d-block"></i>
                             Siziň edaraňyza degişli işjeň çäre tapylmady.
                         </td>

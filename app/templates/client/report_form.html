@@ -17,29 +17,12 @@
                     <form method="POST" enctype="multipart/form-data">
                         
                         <div class="mb-4 bg-light p-3 rounded-3 border">
-                            <label class="form-label fw-bold text-secondary small text-uppercase">Hasabat döwri (Period - {{ event.report_type }})</label>
-                            
-                            {% if event.report_type == 'gündelik' %}
-                                <input type="date" name="report_period" class="form-control" required>
-                            
-                            {% elif event.report_type == 'hepdeleýin' %}
-                                <input type="week" name="report_period" class="form-control" required>
-                            
-                            {% elif event.report_type == 'aýlyk' %}
-                                <input type="month" name="report_period" class="form-control" required>
-                            
-                            {% elif event.report_type == 'çärýeklik' %}
-                                <select name="report_period" class="form-select" required>
-                                    <option value="" disabled selected>Çärýegi saýlaň...</option>
-                                    <option value="2026-Q1">1-nji çärýek (2026)</option>
-                                    <option value="2026-Q2">2-nji çärýek (2026)</option>
-                                    <option value="2026-Q3">3-nji çärýek (2026)</option>
-                                    <option value="2026-Q4">4-nji çärýek (2026)</option>
-                                </select>
-                            
-                            {% elif event.report_type == 'ýyllyk' %}
-                                <input type="number" name="report_period" class="form-control" min="2020" max="2050" placeholder="Mysal üçin: 2026" required>
-                            {% endif %}
+                            <label class="form-label fw-bold text-secondary small text-uppercase">Hasabat döwri ({{ event.report_type }})</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-0"><i class="bi bi-lock-fill text-muted"></i></span>
+                                <input type="text" class="form-control bg-white border-0 fw-bold text-primary" value="{{ current_period }}" readonly>
+                            </div>
+                            <small class="text-muted">Bu döwür amaldaky senä görä awtomatik kesgitlendi.</small>
                         </div>
 
                         <div class="row">
