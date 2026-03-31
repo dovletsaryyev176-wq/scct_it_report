@@ -2,6 +2,8 @@
 
 {% block content %}
 <div class="container-fluid">
+
+    {# ── Приветственная плашка ── #}
     <div class="row mb-4">
         <div class="col-12">
             <div class="card border-0 shadow-sm rounded-4 bg-success text-white">
@@ -12,6 +14,7 @@
         </div>
     </div>
 
+    {# ── Навигация ── #}
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div class="btn-group shadow-sm rounded-3 bg-white p-1">
             <a href="{{ url_for('client.dashboard') }}" class="btn btn-light rounded-3 px-3 text-secondary">
@@ -21,7 +24,6 @@
                 <i class="bi bi-archive me-1"></i> Arhiw
             </a>
         </div>
-        
         <span class="badge bg-white text-dark border px-3 py-2 rounded-pill shadow-sm">
             Tabşyrylan hasabatlar: {{ reports|length }}
         </span>
@@ -32,119 +34,162 @@
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light border-bottom text-uppercase small text-secondary">
                     <tr>
-                        <th class="px-4 py-3">Senesi we Döwri</th>
+                        <th class="px-4 py-3">Senesi / Döwri</th>
                         <th class="py-3">Çäräniň ady</th>
                         <th class="py-3">Mazmuny</th>
                         <th class="py-3">Faýllar</th>
                         <th class="py-3">Ýagdaýy</th>
+                        <th class="py-3">Barlag</th>
+                        <th class="text-end px-4 py-3">Amal</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for r in reports %}
+                    {% set report_files = files_by_report.get(r.id, []) %}
+                    {% set docs   = report_files | selectattr('file_type', 'eq', 'document') | list %}
+                    {% set photos = report_files | selectattr('file_type', 'eq', 'photo')    | list %}
+                    {% set rev_status = r.review_status %}
                     <tr>
+                        {# Дата / период #}
                         <td class="px-4">
                             <div class="d-flex flex-column">
                                 <span class="fw-bold text-dark">{{ r.report_period }}</span>
                                 <small class="text-muted">{{ r.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
                             </div>
                         </td>
+
+                        {# Мероприятие #}
                         <td>
                             <div class="d-flex flex-column">
                                 <small class="text-muted">{{ r.program_name }}</small>
                                 <span class="fw-semibold text-dark">{{ r.item_number }}. {{ r.event_name }}</span>
                             </div>
                         </td>
+
+                        {# Описание #}
                         <td>
-                            <div class="text-truncate text-muted small" style="max-width: 200px;" title="{{ r.description }}">
+                            <div class="text-truncate text-muted small" style="max-width:180px;" title="{{ r.description }}">
                                 {{ r.description }}
                             </div>
                         </td>
+
+                        {# Файлы #}
                         <td>
                             <div class="d-flex flex-column gap-1">
-                                {% set report_files = files_by_report.get(r.id, []) %}
-                                
-                                {% set docs = [] %}
-                                {% set photos = [] %}
-                                
-                                {% for f in report_files %}
-                                    {% if f.file_type == 'document' %}{% set _ = docs.append(f) %}{% endif %}
-                                    {% if f.file_type == 'photo' %}{% set _ = photos.append(f) %}{% endif %}
-                                {% endfor %}
-
                                 {% for doc in docs %}
-                                    <a href="{{ url_for('static', filename=doc.file_path) }}" target="_blank" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center rounded-3 py-1 px-2 text-start" style="max-width: 250px;">
-                                        <i class="bi bi-file-earmark-text me-1 fs-6"></i>
-                                        <span class="text-truncate flex-grow-1" style="font-size: 0.75rem;">{{ doc.original_name }}</span>
-                                    </a>
+                                <a href="{{ url_for('static', filename=doc.file_path) }}" target="_blank"
+                                   class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center rounded-3 py-1 px-2 text-start"
+                                   style="max-width:220px;">
+                                    <i class="bi bi-file-earmark-text me-1 fs-6"></i>
+                                    <span class="text-truncate flex-grow-1" style="font-size:.75rem;">{{ doc.original_name }}</span>
+                                </a>
                                 {% endfor %}
 
                                 {% if photos %}
-                                    <button type="button" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center rounded-3 py-1 px-2 text-start" style="max-width: 250px;" data-bs-toggle="modal" data-bs-target="#galleryModal{{ r.id }}">
-                                        <i class="bi bi-images me-1 fs-6"></i>
-                                        <span class="text-truncate flex-grow-1" style="font-size: 0.75rem;">Suratlara seretmek</span>
-                                        <span class="badge bg-primary text-white ms-1">{{ photos|length }}</span>
-                                    </button>
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-primary d-inline-flex align-items-center rounded-3 py-1 px-2"
+                                        data-bs-toggle="modal" data-bs-target="#galleryModal{{ r.id }}"
+                                        style="max-width:220px;">
+                                    <i class="bi bi-images me-1 fs-6"></i>
+                                    <span class="text-truncate flex-grow-1" style="font-size:.75rem;">Suratlara seretmek</span>
+                                    <span class="badge bg-primary text-white ms-1">{{ photos|length }}</span>
+                                </button>
 
-                                    <div class="modal fade" id="galleryModal{{ r.id }}" tabindex="-1" aria-hidden="true">
-                                        <div class="modal-dialog modal-fullscreen"> <div class="modal-content bg-black border-0">
-                                                
-                                                <div class="modal-header border-0 position-absolute top-0 w-100 p-3 p-md-4" style="z-index: 10; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);">
-                                                    <h5 class="modal-title text-white fw-light text-truncate pe-4">
-                                                        {{ r.event_name }} <span class="text-white-50 ms-2 fs-6 d-none d-md-inline">({{ r.report_period }})</span>
-                                                    </h5>
-                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                </div>
-                                                
-                                                <div class="modal-body p-0">
-                                                    <div id="carousel{{ r.id }}" class="carousel slide h-100" data-bs-ride="false">
-                                                        <div class="carousel-inner h-100">
-                                                            {% for photo in photos %}
-                                                            <div class="carousel-item h-100 {% if loop.first %}active{% endif %}">
-                                                                <img src="{{ url_for('static', filename=photo.file_path) }}" 
-                                                                     class="d-block w-100 h-100" 
-                                                                     style="object-fit: contain;" 
-                                                                     alt="{{ photo.original_name }}">
-                                                                
-                                                                <div class="carousel-caption d-none d-md-block pb-4">
-                                                                    <span class="bg-dark bg-opacity-75 px-4 py-2 rounded-pill shadow-sm small">
-                                                                        {{ photo.original_name }}
-                                                                    </span>
-                                                                </div>
+                                {# Gallery Modal #}
+                                <div class="modal fade" id="galleryModal{{ r.id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-fullscreen">
+                                        <div class="modal-content bg-black border-0">
+                                            <div class="modal-header border-0 position-absolute top-0 w-100 p-3 p-md-4"
+                                                 style="z-index:10;background:linear-gradient(to bottom,rgba(0,0,0,.8),transparent);">
+                                                <h5 class="modal-title text-white fw-light text-truncate pe-4">
+                                                    {{ r.event_name }}
+                                                    <span class="text-white-50 ms-2 fs-6 d-none d-md-inline">({{ r.report_period }})</span>
+                                                </h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body p-0">
+                                                <div id="carousel{{ r.id }}" class="carousel slide h-100" data-bs-ride="false">
+                                                    <div class="carousel-inner h-100">
+                                                        {% for photo in photos %}
+                                                        <div class="carousel-item h-100 {% if loop.first %}active{% endif %}">
+                                                            <img src="{{ url_for('static', filename=photo.file_path) }}"
+                                                                 class="d-block w-100 h-100" style="object-fit:contain;"
+                                                                 alt="{{ photo.original_name }}">
+                                                            <div class="carousel-caption d-none d-md-block pb-4">
+                                                                <span class="bg-dark bg-opacity-75 px-4 py-2 rounded-pill shadow-sm small">
+                                                                    {{ photo.original_name }}
+                                                                </span>
                                                             </div>
-                                                            {% endfor %}
                                                         </div>
-                                                        
-                                                        {% if photos|length > 1 %}
-                                                        <button class="carousel-control-prev w-auto px-2 px-md-4" type="button" data-bs-target="#carousel{{ r.id }}" data-bs-slide="prev">
-                                                            <span class="carousel-control-prev-icon" style="width: 3rem; height: 3rem; filter: drop-shadow(0px 0px 5px rgba(0,0,0,0.8));" aria-hidden="true"></span>
-                                                            <span class="visually-hidden">Öňki</span>
-                                                        </button>
-                                                        <button class="carousel-control-next w-auto px-2 px-md-4" type="button" data-bs-target="#carousel{{ r.id }}" data-bs-slide="next">
-                                                            <span class="carousel-control-next-icon" style="width: 3rem; height: 3rem; filter: drop-shadow(0px 0px 5px rgba(0,0,0,0.8));" aria-hidden="true"></span>
-                                                            <span class="visually-hidden">Indiki</span>
-                                                        </button>
-                                                        {% endif %}
+                                                        {% endfor %}
                                                     </div>
+                                                    {% if photos|length > 1 %}
+                                                    <button class="carousel-control-prev w-auto px-2 px-md-4" type="button"
+                                                            data-bs-target="#carousel{{ r.id }}" data-bs-slide="prev">
+                                                        <span class="carousel-control-prev-icon" style="width:3rem;height:3rem;filter:drop-shadow(0 0 5px rgba(0,0,0,.8));"></span>
+                                                    </button>
+                                                    <button class="carousel-control-next w-auto px-2 px-md-4" type="button"
+                                                            data-bs-target="#carousel{{ r.id }}" data-bs-slide="next">
+                                                        <span class="carousel-control-next-icon" style="width:3rem;height:3rem;filter:drop-shadow(0 0 5px rgba(0,0,0,.8));"></span>
+                                                    </button>
+                                                    {% endif %}
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+                                </div>
                                 {% endif %}
 
                                 {% if not docs and not photos %}
-                                    <span class="text-muted small">Faýl ýok</span>
+                                <span class="text-muted small">Faýl ýok</span>
                                 {% endif %}
                             </div>
                         </td>
+
+                        {# Işiň ýagdaýy (event_statuses) #}
                         <td>
                             <span class="badge bg-success-subtle text-success border rounded-pill px-3 py-2">
                                 {{ r.status_name }}
                             </span>
                         </td>
+
+                        {# Barlag statusi (review_status) #}
+                        <td>
+                            {% if rev_status == 'under_review' %}
+                            <span class="badge bg-primary-subtle text-primary border rounded-pill px-3 py-2">
+                                <i class="bi bi-hourglass-split me-1"></i>Barlagda
+                            </span>
+                            {% elif rev_status == 'returned' %}
+                            <span class="badge bg-warning-subtle text-warning-emphasis border rounded-pill px-3 py-2">
+                                <i class="bi bi-arrow-return-left me-1"></i>Gaýtaryldy
+                            </span>
+                            {% elif rev_status == 'accepted' %}
+                            <span class="badge bg-success-subtle text-success border rounded-pill px-3 py-2">
+                                <i class="bi bi-patch-check-fill me-1"></i>Kabul edildi
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        {# Действия #}
+                        <td class="text-end px-4">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a href="{{ url_for('client.report_detail', report_id=r.id) }}"
+                                   class="btn btn-sm btn-outline-secondary rounded-3 px-3"
+                                   title="Taryhy görmek">
+                                    <i class="bi bi-clock-history"></i>
+                                </a>
+                                {% if rev_status == 'returned' %}
+                                <a href="{{ url_for('client.edit_report', report_id=r.id) }}"
+                                   class="btn btn-sm btn-warning rounded-3 px-3">
+                                    <i class="bi bi-pencil-fill me-1"></i>Düzetmek
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="5" class="text-center py-5 text-muted">
+                        <td colspan="7" class="text-center py-5 text-muted">
                             <i class="bi bi-folder-x display-4 mb-3 d-block"></i>
                             Arhiwde maglumat tapylmady.
                         </td>
@@ -154,5 +199,6 @@
             </table>
         </div>
     </div>
+
 </div>
 {% endblock %}

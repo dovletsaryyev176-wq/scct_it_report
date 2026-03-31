@@ -147,6 +147,32 @@ CREATE TABLE reports (
     UNIQUE KEY unique_report_period (organization_id, event_id, report_period)
 );
 
+-- Текущий статус проверки отчёта (одна строка на отчёт, обновляется при каждой смене)
+-- under_review = на проверке (клиент сохранил / повторно сдал)
+-- returned     = возвращён (модуль проверки отклонил)
+-- accepted     = сдан (модуль проверки принял)
+-- Отсутствие строки = клиент ещё не подавал отчёт (не введён)
+CREATE TABLE report_submissions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    report_id INT NOT NULL,
+    review_status ENUM('under_review', 'returned', 'accepted') NOT NULL DEFAULT 'under_review',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_report_submission (report_id),
+    FOREIGN KEY (report_id) REFERENCES reports(id) ON DELETE CASCADE
+);
+
+-- История всех смен статуса отчёта (только INSERT, никогда не удаляется)
+CREATE TABLE report_review_history (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    report_id INT NOT NULL,
+    review_status ENUM('under_review', 'returned', 'accepted') NOT NULL,
+    reviewer_comment TEXT NULL,     -- Комментарий (при returned/accepted)
+    changed_by INT NULL,            -- users.id кто изменил (NULL = сам клиент при первой сдаче)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (report_id) REFERENCES reports(id) ON DELETE CASCADE,
+    FOREIGN KEY (changed_by) REFERENCES users(id) ON DELETE SET NULL
+);
+
 CREATE TABLE report_files (
     id INT AUTO_INCREMENT PRIMARY KEY,
     report_id INT NOT NULL,

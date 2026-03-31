@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+
+            {# ── Навигация назад ── #}
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <a href="{{ url_for('client.archive') }}" class="btn btn-light btn-sm rounded-3 border shadow-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Arhiwe gaýt
+                </a>
+                <h5 class="mb-0 fw-bold text-dark">Hasabat barada maglumat</h5>
+            </div>
+
+            {# ── Карточка с данными отчёта ── #}
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="d-flex flex-column gap-2">
+                                <div>
+                                    <div class="text-muted small text-uppercase fw-bold mb-1">Maksatnama</div>
+                                    <div class="fw-semibold">{{ report.program_name }}</div>
+                                </div>
+                                <div>
+                                    <div class="text-muted small text-uppercase fw-bold mb-1">Çäre</div>
+                                    <div class="fw-semibold">{{ report.item_number }}. {{ report.event_name }}</div>
+                                </div>
+                                <div>
+                                    <div class="text-muted small text-uppercase fw-bold mb-1">Hasabat döwri</div>
+                                    <span class="badge bg-primary-subtle text-primary border rounded-pill px-3 py-2">
+                                        <i class="bi bi-calendar me-1"></i>{{ report.report_period }}
+                                        <small class="text-muted">({{ report.report_type }})</small>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex flex-column gap-2">
+                                <div>
+                                    <div class="text-muted small text-uppercase fw-bold mb-1">Işiň ýagdaýy</div>
+                                    <span class="badge bg-success-subtle text-success border rounded-pill px-3 py-2">
+                                        {{ report.status_name }}
+                                    </span>
+                                </div>
+                                <div>
+                                    <div class="text-muted small text-uppercase fw-bold mb-1">Barlag statusy</div>
+                                    {% if report.review_status == 'under_review' %}
+                                    <span class="badge bg-primary-subtle text-primary border rounded-pill px-3 py-2">
+                                        <i class="bi bi-hourglass-split me-1"></i>Barlagda
+                                    </span>
+                                    {% elif report.review_status == 'returned' %}
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border rounded-pill px-3 py-2">
+                                        <i class="bi bi-arrow-return-left me-1"></i>Gaýtaryldy
+                                    </span>
+                                    {% elif report.review_status == 'accepted' %}
+                                    <span class="badge bg-success-subtle text-success border rounded-pill px-3 py-2">
+                                        <i class="bi bi-patch-check-fill me-1"></i>Kabul edildi
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <div class="text-muted small text-uppercase fw-bold mb-1">Ilkinji tabşyrylan</div>
+                                    <div class="small text-dark">{{ report.created_at.strftime('%d.%m.%Y %H:%M') }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# Описание #}
+                    <div class="mt-4 pt-3 border-top">
+                        <div class="text-muted small text-uppercase fw-bold mb-2">Gysgaça beýany</div>
+                        <div class="text-dark" style="white-space:pre-wrap;">{{ report.description }}</div>
+                    </div>
+
+                    {# Файлы #}
+                    {% set docs   = files | selectattr('file_type', 'eq', 'document') | list %}
+                    {% set photos = files | selectattr('file_type', 'eq', 'photo')    | list %}
+                    {% if docs or photos %}
+                    <div class="mt-4 pt-3 border-top">
+                        <div class="text-muted small text-uppercase fw-bold mb-2">Faýllar</div>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for doc in docs %}
+                            <a href="{{ url_for('static', filename=doc.file_path) }}" target="_blank"
+                               class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center rounded-3 py-1 px-2">
+                                <i class="bi bi-file-earmark-text me-1"></i>
+                                <span class="text-truncate" style="font-size:.75rem;max-width:200px;">{{ doc.original_name }}</span>
+                            </a>
+                            {% endfor %}
+                            {% for photo in photos %}
+                            <a href="{{ url_for('static', filename=photo.file_path) }}" target="_blank"
+                               class="btn btn-sm btn-outline-primary d-inline-flex align-items-center rounded-3 py-1 px-2">
+                                <i class="bi bi-image me-1"></i>
+                                <span class="text-truncate" style="font-size:.75rem;max-width:200px;">{{ photo.original_name }}</span>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# ── Timeline истории проверок ── #}
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-0 pt-3 pb-2 px-4 rounded-top-4">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-clock-history text-primary fs-5"></i>
+                        <h6 class="mb-0 fw-bold text-dark">Barlag taryhy</h6>
+                        <span class="badge bg-light text-dark border ms-1">{{ history|length }} wakasy</span>
+                    </div>
+                </div>
+                <div class="card-body px-4 pt-2 pb-4">
+                    {% if history %}
+                    <div class="position-relative">
+                        {# Вертикальная линия тайм-лайна #}
+                        <div class="position-absolute start-0 top-0 h-100"
+                             style="left:20px !important;width:2px;background:linear-gradient(to bottom,#dee2e6,#dee2e6);margin-left:20px;"></div>
+
+                        <div class="d-flex flex-column gap-0" style="padding-left:60px;">
+                            {% for h in history %}
+                            {% set is_last = loop.last %}
+
+                            {# Иконка и цвет по статусу #}
+                            {% if h.review_status == 'under_review' %}
+                                {% set icon = 'bi-send-fill' %}
+                                {% set color = '#0d6efd' %}
+                                {% set bg = '#e7f1ff' %}
+                                {% set label = 'Tabşyryldy / Barlagda' %}
+                            {% elif h.review_status == 'returned' %}
+                                {% set icon = 'bi-arrow-return-left' %}
+                                {% set color = '#fd7e14' %}
+                                {% set bg = '#fff3cd' %}
+                                {% set label = 'Gaýtaryldy' %}
+                            {% elif h.review_status == 'accepted' %}
+                                {% set icon = 'bi-patch-check-fill' %}
+                                {% set color = '#198754' %}
+                                {% set bg = '#d1e7dd' %}
+                                {% set label = 'Kabul edildi' %}
+                            {% endif %}
+
+                            <div class="position-relative pb-4 {% if is_last %}pb-0{% endif %}">
+                                {# Иконка на линии #}
+                                <div class="position-absolute d-flex align-items-center justify-content-center rounded-circle shadow-sm"
+                                     style="left:-48px;top:4px;width:36px;height:36px;background:{{ bg }};border:2px solid {{ color }};">
+                                    <i class="bi {{ icon }}" style="color:{{ color }};font-size:.85rem;"></i>
+                                </div>
+
+                                {# Карточка события #}
+                                <div class="rounded-4 p-3 border"
+                                     style="background:{{ bg }};border-color:{{ color }} !important;">
+                                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                                        <div>
+                                            <span class="fw-bold" style="color:{{ color }};">{{ label }}</span>
+                                            {% if h.reviewer_name %}
+                                            <span class="text-muted small ms-2">— {{ h.reviewer_name }}</span>
+                                            {% elif h.review_status == 'under_review' %}
+                                            <span class="text-muted small ms-2">— Siz</span>
+                                            {% endif %}
+                                        </div>
+                                        <small class="text-muted flex-shrink-0">
+                                            <i class="bi bi-clock me-1"></i>
+                                            {{ h.created_at.strftime('%d.%m.%Y %H:%M') }}
+                                        </small>
+                                    </div>
+
+                                    {% if h.reviewer_comment %}
+                                    <div class="mt-2 pt-2 border-top" style="border-color:rgba(0,0,0,.1) !important;">
+                                        <div class="small text-dark" style="white-space:pre-wrap;">
+                                            <i class="bi bi-chat-left-quote me-1" style="color:{{ color }};"></i>
+                                            {{ h.reviewer_comment }}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-clock-history fs-2 d-block mb-2 opacity-50"></i>
+                        Taryhda maglumat ýok.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# ── Кнопка редактирования (если returned) ── #}
+            {% if report.review_status == 'returned' %}
+            <div class="d-grid">
+                <a href="{{ url_for('client.edit_report', report_id=report.id) }}"
+                   class="btn btn-warning btn-lg rounded-4 shadow-sm py-3">
+                    <i class="bi bi-pencil-fill me-2"></i>
+                    Hasabaty düzetmek we täzeden tabşyrmak
+                </a>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+{% endblock %}
