@@ -28,6 +28,16 @@ def client_required(f):
     return decorated_function
 
 
+def company_user_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session or session.get('role') != 'company_user':
+            flash('Bu bölüme girmek üçin company_user hökmünde giriň', 'danger')
+            return redirect(url_for('auth.login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
 def roles_required(*roles):
     def wrapper(f):
         @wraps(f)
@@ -82,6 +92,8 @@ def login():
             
             if user['role'] == 'admin':
                 return redirect(url_for('admin.manage_cities'))
+            elif user['role'] == 'company_user':
+                return redirect(url_for('company_user.programs'))
             else:
                 return redirect(url_for('client.dashboard'))
         

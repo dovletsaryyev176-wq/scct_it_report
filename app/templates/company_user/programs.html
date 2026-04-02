@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h1 class="h3 fw-bold mb-0">Maksatnamalar</h1>
+        <p class="text-muted small mb-0">Hasabatlary barlamak üçin maksatnama saýlaň</p>
+    </div>
+</div>
+
+{% if programs %}
+<div class="row g-4">
+    {% for p in programs %}
+    <div class="col-md-6 col-lg-4">
+        <a href="{{ url_for('company_user.program_events', program_id=p.id) }}"
+           class="text-decoration-none">
+        <div class="card border-0 shadow-sm h-100 program-card">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-start mb-3">
+                    <div class="program-icon me-3">
+                        <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                            <rect width="36" height="36" rx="8" fill="#198754" fill-opacity="0.12"/>
+                            <path d="M10 11h16M10 17h16M10 23h10" stroke="#198754" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h5 class="card-title fw-semibold mb-1 text-dark lh-sm">{{ p.name }}</h5>
+                        {% if p.order_number %}
+                        <span class="text-muted small">№{{ p.order_number }}
+                            {% if p.order_date %}
+                            &nbsp;·&nbsp;{{ p.order_date.strftime('%d.%m.%Y') if p.order_date else '' }}
+                            {% endif %}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if p.start_date or p.end_date %}
+                <div class="mb-3 small text-muted">
+                    📅
+                    {% if p.start_date %}{{ p.start_date.strftime('%d.%m.%Y') }}{% else %}—{% endif %}
+                    →
+                    {% if p.end_date %}{{ p.end_date.strftime('%d.%m.%Y') }}{% else %}—{% endif %}
+                </div>
+                {% endif %}
+
+                <div class="d-flex gap-2 flex-wrap">
+                    {% if p.cnt_under_review > 0 %}
+                    <span class="badge rounded-pill bg-warning text-dark px-3 py-2">
+                        ⏳ {{ p.cnt_under_review }} barlagda
+                    </span>
+                    {% endif %}
+                    {% if p.cnt_returned > 0 %}
+                    <span class="badge rounded-pill bg-danger px-3 py-2">
+                        ↩ {{ p.cnt_returned }} gaýtaryldy
+                    </span>
+                    {% endif %}
+                    {% if p.cnt_accepted > 0 %}
+                    <span class="badge rounded-pill bg-success px-3 py-2">
+                        ✓ {{ p.cnt_accepted }} kabul edildi
+                    </span>
+                    {% endif %}
+                    {% if p.cnt_under_review == 0 and p.cnt_returned == 0 and p.cnt_accepted == 0 %}
+                    <span class="badge rounded-pill bg-secondary px-3 py-2">
+                        Hasabat ýok
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-footer bg-transparent border-0 px-4 pb-3">
+                <span class="text-success small fw-semibold">Çäreleri görmek →</span>
+            </div>
+        </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5">
+    <div class="mb-3" style="font-size:3rem;">📋</div>
+    <h5 class="text-muted">Aktiv maksatnama tapylmady</h5>
+</div>
+{% endif %}
+
+<style>
+.program-card {
+    transition: transform .18s ease, box-shadow .18s ease;
+    border-radius: 14px !important;
+}
+.program-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 32px rgba(25,135,84,.15) !important;
+}
+</style>
+{% endblock %}

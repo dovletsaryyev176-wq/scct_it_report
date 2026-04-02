@@ -11,10 +11,12 @@ def create_app():
     from app.admin.routes import admin_bp
     from app.auth import auth_bp
     from app.client.routes import client_bp
+    from app.company_user.routes import company_user_bp
     
     app.register_blueprint(admin_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(client_bp)
+    app.register_blueprint(company_user_bp)
 
     @app.route('/')
     def index():

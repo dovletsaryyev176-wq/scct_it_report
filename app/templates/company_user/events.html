@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('company_user.programs') }}" class="text-success text-decoration-none">Maksatnamalar</a>
+        </li>
+        <li class="breadcrumb-item active text-muted" aria-current="page">{{ program.name }}</li>
+    </ol>
+</nav>
+
+<!-- Header -->
+<div class="card border-0 shadow-sm mb-4" style="border-radius:14px;">
+    <div class="card-body p-4">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div>
+                <h1 class="h4 fw-bold mb-1">{{ program.name }}</h1>
+                <div class="text-muted small">
+                    {% if program.order_number %}
+                        Buýruk №{{ program.order_number }}
+                        {% if program.order_date %} · {{ program.order_date.strftime('%d.%m.%Y') }}{% endif %}
+                        &nbsp;|&nbsp;
+                    {% endif %}
+                    {% if report_type %}
+                        <span class="badge bg-light text-dark border">{{ report_type }}</span>
+                    {% endif %}
+                    {% if current_period %}
+                        &nbsp;·&nbsp; Häzirki döwür: <strong>{{ current_period }}</strong>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Events table -->
+{% if events %}
+<div class="card border-0 shadow-sm" style="border-radius:14px; overflow:hidden;">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-4" style="width:60px;">№</th>
+                    <th>Çäre ady</th>
+                    <th class="text-center" style="width:110px;">Möhleti</th>
+                    <th class="text-center" style="width:90px;">Jemi</th>
+                    <th class="text-center" style="width:110px;">Barlagda</th>
+                    <th class="text-center" style="width:110px;">Gaýtaryldy</th>
+                    <th class="text-center" style="width:110px;">Kabul edildi</th>
+                    <th class="text-center" style="width:100px;">Öňe gidişlik</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in events %}
+                {% set not_submitted = e.total_orgs - e.submitted %}
+                {% set pct = ((e.cnt_accepted / e.total_orgs) * 100) | int if e.total_orgs > 0 else 0 %}
+                <tr>
+                    <td class="ps-4 text-muted fw-semibold">{{ e.item_number or loop.index }}</td>
+                    <td>
+                        <div class="fw-semibold">{{ e.name }}</div>
+                    </td>
+                    <td class="text-center">
+                        {% if e.deadline %}
+                        <span class="small text-muted">{{ e.deadline }}</span>
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center fw-bold">{{ e.total_orgs }}</td>
+                    <td class="text-center">
+                        {% if e.cnt_under_review > 0 %}
+                        <span class="badge bg-warning text-dark rounded-pill px-2">{{ e.cnt_under_review }}</span>
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% if e.cnt_returned > 0 %}
+                        <span class="badge bg-danger rounded-pill px-2">{{ e.cnt_returned }}</span>
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% if e.cnt_accepted > 0 %}
+                        <span class="badge bg-success rounded-pill px-2">{{ e.cnt_accepted }}</span>
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center" style="min-width:100px;">
+                        <div class="progress" style="height:8px; border-radius:99px;">
+                            <div class="progress-bar bg-success" style="width:{{ pct }}%"></div>
+                        </div>
+                        <div class="small text-muted mt-1">{{ pct }}%</div>
+                    </td>
+                    <td class="pe-3">
+                        <a href="{{ url_for('company_user.event_reports', event_id=e.id) }}"
+                           class="btn btn-sm btn-outline-success rounded-pill px-3">
+                            Görmek
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="text-center py-5">
+    <div class="mb-3" style="font-size:3rem;">📭</div>
+    <h5 class="text-muted">Bu maksatnama üçin çäre tapylmady</h5>
+</div>
+{% endif %}
+
+{% endblock %}

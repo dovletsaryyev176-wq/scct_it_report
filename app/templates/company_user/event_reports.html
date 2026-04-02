@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('company_user.programs') }}" class="text-success text-decoration-none">Maksatnamalar</a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('company_user.program_events', program_id=event.program_id) }}" class="text-success text-decoration-none">{{ event.program_name }}</a>
+        </li>
+        <li class="breadcrumb-item active text-muted" aria-current="page">{{ event.item_number }} — {{ event.name | truncate(50) }}</li>
+    </ol>
+</nav>
+
+<!-- Event header card -->
+<div class="card border-0 shadow-sm mb-4" style="border-radius:14px;">
+    <div class="card-body p-4">
+        <div class="row align-items-center">
+            <div class="col">
+                <h1 class="h4 fw-bold mb-1">
+                    {% if event.item_number %}<span class="text-success me-2">{{ event.item_number }}.</span>{% endif %}
+                    {{ event.name }}
+                </h1>
+                <div class="text-muted small">
+                    <span class="badge bg-light text-dark border me-2">{{ event.report_type }}</span>
+                    Döwür: <strong>{{ current_period }}</strong>
+                    {% if event.deadline %}
+                    &nbsp;·&nbsp; Möhleti: {{ event.deadline }}
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-auto">
+                <!-- Summary badges -->
+                {% set total = orgs | length %}
+                {% set under_review_count = orgs | selectattr('review_status', '==', 'under_review') | list | length %}
+                {% set returned_count = orgs | selectattr('review_status', '==', 'returned') | list | length %}
+                {% set accepted_count = orgs | selectattr('review_status', '==', 'accepted') | list | length %}
+                {% set not_sub_count = orgs | rejectattr('report_id') | list | length %}
+                <div class="d-flex gap-2 flex-wrap justify-content-end">
+                    <span class="badge rounded-pill bg-secondary px-3 py-2">Jemi: {{ total }}</span>
+                    {% if under_review_count > 0 %}<span class="badge rounded-pill bg-warning text-dark px-3 py-2">⏳ {{ under_review_count }}</span>{% endif %}
+                    {% if returned_count > 0 %}<span class="badge rounded-pill bg-danger px-3 py-2">↩ {{ returned_count }}</span>{% endif %}
+                    {% if accepted_count > 0 %}<span class="badge rounded-pill bg-success px-3 py-2">✓ {{ accepted_count }}</span>{% endif %}
+                    {% if not_sub_count > 0 %}<span class="badge rounded-pill bg-light text-dark border px-3 py-2">📭 {{ not_sub_count }} tabşyrmady</span>{% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search -->
+<div class="mb-3">
+    <input type="text" id="orgSearch" class="form-control border-0 shadow-sm"
+           placeholder="🔍 Edara adyna görä gözleýin..."
+           style="border-radius:10px; padding:.65rem 1rem;">
+</div>
+
+<!-- Table -->
+<div class="card border-0 shadow-sm" style="border-radius:14px; overflow:hidden;">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="orgsTable">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-4" style="width:40px;">#</th>
+                    <th>Edara</th>
+                    <th>Welaýat / Etrap</th>
+                    <th class="text-center" style="width:160px;">Hasabat ýagdaýy</th>
+                    <th class="text-center" style="width:120px;">Tabşyrylan</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for org in orgs %}
+                <tr class="org-row">
+                    <td class="ps-4 text-muted">{{ loop.index }}</td>
+                    <td>
+                        <div class="fw-semibold">{{ org.org_name }}</div>
+                        {% if org.address %}<div class="text-muted small">{{ org.address }}</div>{% endif %}
+                    </td>
+                    <td class="text-muted small">
+                        {{ org.city_name or '' }}{% if org.city_name and org.district_name %} / {% endif %}{{ org.district_name or '' }}
+                    </td>
+                    <td class="text-center">
+                        {% if org.review_status == 'under_review' %}
+                            <span class="badge rounded-pill bg-warning text-dark px-3 py-1">⏳ Barlagda</span>
+                        {% elif org.review_status == 'returned' %}
+                            <span class="badge rounded-pill bg-danger px-3 py-1">↩ Gaýtaryldy</span>
+                        {% elif org.review_status == 'accepted' %}
+                            <span class="badge rounded-pill bg-success px-3 py-1">✓ Kabul edildi</span>
+                        {% else %}
+                            <span class="badge rounded-pill bg-light text-secondary border px-3 py-1">📭 Tabşyrylmady</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center text-muted small">
+                        {% if org.submitted_at %}
+                            {% if org.report_period and org.report_period != current_period %}
+                            <span class="badge bg-warning text-dark rounded-pill mb-1">{{ org.report_period }}</span><br>
+                            {% endif %}
+                            {{ org.submitted_at.strftime('%d.%m.%Y %H:%M') }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td class="pe-3 text-end">
+                        {% if org.report_id %}
+                        <a href="{{ url_for('company_user.report_detail', report_id=org.report_id) }}"
+                           class="btn btn-sm btn-outline-success rounded-pill px-3">
+                            Hasabaty açmak
+                        </a>
+                        {% else %}
+                        <button class="btn btn-sm btn-light rounded-pill px-3" disabled>Tabşyrylmady</button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+document.getElementById('orgSearch').addEventListener('input', function () {
+    const val = this.value.toLowerCase();
+    document.querySelectorAll('.org-row').forEach(row => {
+        const text = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+        row.style.display = text.includes(val) ? '' : 'none';
+    });
+});
+</script>
+
+{% endblock %}

@@ -73,9 +73,15 @@
 
 
             {% endif %}
+
+                    {% if session.get('role') == 'company_user' %}
+        <li class="nav-item">
+            <a class="nav-link {{ 'active' if request.path.startswith('/company/programs') }}"
+               href="{{ url_for('company_user.programs') }}">Maksatnamalar</a>
+        </li>
+                    {% endif %}
                     
                 
-                    
                 </ul>
 
                 <div class="navbar-nav ms-auto align-items-lg-center">
