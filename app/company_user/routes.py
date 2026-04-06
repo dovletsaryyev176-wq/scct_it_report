@@ -445,3 +445,96 @@ def return_report(report_id):
         conn.close()
 
     return redirect(url_for('company_user.report_detail', report_id=report_id))
+
+
+# ─────────────────────────────────────────
+# ALL REPORTS (GLOBAL VIEW)
+# ─────────────────────────────────────────
+
+@company_user_bp.route('/all-reports')
+@company_user_required
+def all_reports():
+    from app import get_db_connection
+    conn = get_db_connection()
+
+    # Filters
+    program_id = request.args.get('program_id', '')
+    organization_id = request.args.get('organization_id', '')
+    period = request.args.get('period', '').strip()
+    review_status = request.args.get('review_status', '')
+
+    with conn.cursor() as cursor:
+        # Get active programs for dropdown
+        cursor.execute("SELECT id, name FROM programs WHERE status = 'active' ORDER BY name ASC")
+        programs_list = cursor.fetchall()
+
+        # Get active organizations for dropdown
+        cursor.execute("SELECT id, name FROM organizations WHERE status = 'active' ORDER BY name ASC")
+        orgs_list = cursor.fetchall()
+
+        # Build dynamic query for reports
+        query = """
+            SELECT
+                r.id as report_id,
+                r.report_period,
+                r.created_at as submitted_at,
+                o.name as org_name,
+                p.name as program_name,
+                e.item_number,
+                e.name as event_name,
+                es.name as status_name,
+                COALESCE(rs.review_status, 'under_review') as review_status
+            FROM reports r
+            JOIN organizations o ON r.organization_id = o.id
+            JOIN events e ON r.event_id = e.id
+            JOIN programs p ON e.program_id = p.id
+            LEFT JOIN report_submissions rs ON r.id = rs.report_id
+            LEFT JOIN event_statuses es ON r.status_id = es.id
+            WHERE 1=1
+        """
+        params = []
+
+        if program_id and program_id.isdigit():
+            query += " AND p.id = %s"
+            params.append(int(program_id))
+
+        if organization_id and organization_id.isdigit():
+            query += " AND o.id = %s"
+            params.append(int(organization_id))
+
+        if period:
+            query += " AND r.report_period LIKE %s"
+            params.append(f"%{period}%")
+
+        if review_status in ('under_review', 'returned', 'accepted'):
+            if review_status == 'under_review':
+                query += " AND COALESCE(rs.review_status, 'under_review') = 'under_review'"
+            else:
+                query += " AND rs.review_status = %s"
+                params.append(review_status)
+
+        query += """
+            ORDER BY
+                CASE
+                    WHEN COALESCE(rs.review_status, 'under_review') = 'under_review' THEN 0
+                    WHEN rs.review_status = 'returned' THEN 1
+                    WHEN rs.review_status = 'accepted' THEN 2
+                    ELSE 3
+                END ASC,
+                r.created_at DESC
+            LIMIT 1000
+        """
+
+        cursor.execute(query, tuple(params))
+        reports_list = cursor.fetchall()
+
+    conn.close()
+
+    return render_template('company_user/all_reports.html',
+                           reports=reports_list,
+                           programs=programs_list,
+                           organizations=orgs_list,
+                           selected_program=program_id,
+                           selected_org=organization_id,
+                           selected_period=period,
+                           selected_status=review_status)

@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h1 class="h3 fw-bold mb-0">Ähli hasabatlar</h1>
+        <p class="text-muted small mb-0">Ulgamdaky ähli hasabatlary gözlemek we barlamak</p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+        <form method="GET" action="{{ url_for('company_user.all_reports') }}" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Maksatnama</label>
+                <select name="program_id" class="form-select">
+                    <option value="">-- Ählisi --</option>
+                    {% for p in programs %}
+                    <option value="{{ p.id }}" {% if p.id|string == selected_program %}selected{% endif %}>{{ p.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Edara (Gurama)</label>
+                <select name="organization_id" class="form-select">
+                    <option value="">-- Ählisi --</option>
+                    {% for o in organizations %}
+                    <option value="{{ o.id }}" {% if o.id|string == selected_org %}selected{% endif %}>{{ o.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Döwür</label>
+                <input type="text" name="period" class="form-control" placeholder="Meselem: 2026-03" value="{{ selected_period }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Ýagdaýy</label>
+                <select name="review_status" class="form-select">
+                    <option value="">-- Ählisi --</option>
+                    <option value="under_review" {% if selected_status == 'under_review' %}selected{% endif %}>Barlagda (Garaşylýar)</option>
+                    <option value="returned" {% if selected_status == 'returned' %}selected{% endif %}>Gaýtarylan</option>
+                    <option value="accepted" {% if selected_status == 'accepted' %}selected{% endif %}>Kabul edilen</option>
+                </select>
+            </div>
+            <div class="col-12 text-end mt-4">
+                <a href="{{ url_for('company_user.all_reports') }}" class="btn btn-light me-2">Arassala</a>
+                <button type="submit" class="btn btn-success px-4">Gözle</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="px-4 py-3">№</th>
+                        <th class="py-3">Edara</th>
+                        <th class="py-3">Maksatnama / Çäre</th>
+                        <th class="py-3">Döwür</th>
+                        <th class="py-3">Ýagdaýy</th>
+                        <th class="py-3">Tabşyrylan senesi</th>
+                        <th class="px-4 py-3 text-end">Hereket</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in reports %}
+                    <tr>
+                        <td class="px-4 fw-semibold text-muted">{{ loop.index }}</td>
+                        <td>
+                            <div class="fw-semibold">{{ r.org_name }}</div>
+                        </td>
+                        <td>
+                            <div class="small fw-semibold text-dark">{{ r.program_name }}</div>
+                            <div class="small text-muted">{{ r.item_number }}. {{ r.event_name[:50] }}{% if r.event_name|length > 50 %}...{% endif %}</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">{{ r.report_period }}</span>
+                        </td>
+                        <td>
+                            {% if r.review_status == 'under_review' %}
+                                <span class="badge bg-warning text-dark">⏳ Barlagda</span>
+                            {% elif r.review_status == 'returned' %}
+                                <span class="badge bg-danger">↩ Gaýtaryldy</span>
+                            {% elif r.review_status == 'accepted' %}
+                                <span class="badge bg-success">✓ Kabul edildi</span>
+                            {% endif %}
+                        </td>
+                        <td class="small">
+                            {{ r.submitted_at.strftime('%d.%m.%Y %H:%M') if r.submitted_at else '—' }}
+                        </td>
+                        <td class="px-4 text-end">
+                            <a href="{{ url_for('company_user.report_detail', report_id=r.report_id) }}" class="btn btn-sm btn-outline-success">
+                                Görmek
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <div style="font-size: 2.5rem; margin-bottom: 1rem;">📭</div>
+                            Hasabat tapylmady
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<div class="text-center text-muted small mt-3 mb-5">
+    Jemi tapyldy: {{ reports|length }}
+    {% if reports|length >= 1000 %}
+    (Diňe iň soňky 1000 sanysy görkezilýär)
+    {% endif %}
+</div>
+{% endblock %}
