@@ -23,9 +23,6 @@ def calculate_current_period(report_type):
     return today.strftime('%Y-%m-%d')
 
 
-# ─────────────────────────────────────────
-# PROGRAMS LIST
-# ─────────────────────────────────────────
 
 @company_user_bp.route('/programs')
 @company_user_required
@@ -82,9 +79,6 @@ def programs():
     return render_template('company_user/programs.html', programs=programs_list)
 
 
-# ─────────────────────────────────────────
-# EVENTS OF A PROGRAM
-# ─────────────────────────────────────────
 
 @company_user_bp.route('/programs/<int:program_id>/events')
 @company_user_required
@@ -171,9 +165,6 @@ def program_events(program_id):
                            report_type=report_type)
 
 
-# ─────────────────────────────────────────
-# ORGANIZATIONS & THEIR REPORTS FOR EVENT
-# ─────────────────────────────────────────
 
 @company_user_bp.route('/events/<int:event_id>/reports')
 @company_user_required
@@ -259,9 +250,6 @@ def event_reports(event_id):
                            current_period=current_period)
 
 
-# ─────────────────────────────────────────
-# REPORT DETAIL
-# ─────────────────────────────────────────
 
 @company_user_bp.route('/reports/<int:report_id>')
 @company_user_required
@@ -332,9 +320,7 @@ def report_detail(report_id):
                            files=files)
 
 
-# ─────────────────────────────────────────
-# ACCEPT REPORT
-# ─────────────────────────────────────────
+
 
 @company_user_bp.route('/reports/<int:report_id>/accept', methods=['POST'])
 @company_user_required
@@ -388,9 +374,6 @@ def accept_report(report_id):
     return redirect(url_for('company_user.report_detail', report_id=report_id))
 
 
-# ─────────────────────────────────────────
-# RETURN REPORT
-# ─────────────────────────────────────────
 
 @company_user_bp.route('/reports/<int:report_id>/return', methods=['POST'])
 @company_user_required
@@ -447,9 +430,6 @@ def return_report(report_id):
     return redirect(url_for('company_user.report_detail', report_id=report_id))
 
 
-# ─────────────────────────────────────────
-# ALL REPORTS (GLOBAL VIEW)
-# ─────────────────────────────────────────
 
 @company_user_bp.route('/all-reports')
 @company_user_required

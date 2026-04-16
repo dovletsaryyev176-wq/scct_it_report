@@ -183,21 +183,55 @@
                 {% if photos %}
                 <div>
                     <div class="small text-muted fw-semibold mb-2">🖼 Suratlar ({{ photos | length }})</div>
-                    <div class="row g-2">
-                        {% for f in photos %}
-                        <div class="col-6">
-                            <div class="photo-thumb" onclick="openLightbox({{ loop.index0 }})">
-                                <img src="{{ url_for('static', filename=f.file_path) }}"
-                                     class="img-fluid rounded-3 shadow-sm"
-                                     style="height:110px; width:100%; object-fit:cover; cursor:zoom-in;"
-                                     alt="{{ f.original_name }}"
-                                     onerror="this.parentElement.style.display='none'">
-                                <div class="photo-thumb-overlay">
-                                    <span>🔍</span>
+                    <button type="button"
+                            class="btn btn-sm btn-outline-primary d-inline-flex align-items-center rounded-3 py-1 px-2"
+                            data-bs-toggle="modal" data-bs-target="#galleryModal{{ report.id }}">
+                        <i class="bi bi-images me-1 fs-6"></i>
+                        <span class="text-truncate flex-grow-1" style="font-size:.75rem;">Suratlara seretmek</span>
+                        <span class="badge bg-primary text-white ms-1">{{ photos|length }}</span>
+                    </button>
+
+                    <div class="modal fade" id="galleryModal{{ report.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-fullscreen">
+                            <div class="modal-content bg-black border-0">
+                                <div class="modal-header border-0 position-absolute top-0 w-100 p-3 p-md-4"
+                                     style="z-index:10;background:linear-gradient(to bottom,rgba(0,0,0,.8),transparent);">
+                                    <h5 class="modal-title text-white fw-light text-truncate pe-4">
+                                        {{ report.event_name }}
+                                        <span class="text-white-50 ms-2 fs-6 d-none d-md-inline">({{ report.report_period }})</span>
+                                    </h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body p-0">
+                                    <div id="carousel{{ report.id }}" class="carousel slide h-100" data-bs-ride="false">
+                                        <div class="carousel-inner h-100">
+                                            {% for f in photos %}
+                                            <div class="carousel-item h-100 {% if loop.first %}active{% endif %}">
+                                                <img src="{{ url_for('static', filename=f.file_path) }}"
+                                                     class="d-block w-100 h-100" style="object-fit:contain;"
+                                                     alt="{{ f.original_name }}">
+                                                <div class="carousel-caption d-none d-md-block pb-4">
+                                                    <span class="bg-dark bg-opacity-75 px-4 py-2 rounded-pill shadow-sm small">
+                                                        {{ f.original_name }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        {% if photos|length > 1 %}
+                                        <button class="carousel-control-prev w-auto px-2 px-md-4" type="button"
+                                                data-bs-target="#carousel{{ report.id }}" data-bs-slide="prev">
+                                            <span class="carousel-control-prev-icon" style="width:3rem;height:3rem;filter:drop-shadow(0 0 5px rgba(0,0,0,.8));"></span>
+                                        </button>
+                                        <button class="carousel-control-next w-auto px-2 px-md-4" type="button"
+                                                data-bs-target="#carousel{{ report.id }}" data-bs-slide="next">
+                                            <span class="carousel-control-next-icon" style="width:3rem;height:3rem;filter:drop-shadow(0 0 5px rgba(0,0,0,.8));"></span>
+                                        </button>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        {% endfor %}
                     </div>
                 </div>
                 {% endif %}
@@ -256,197 +290,7 @@
     padding-bottom: .25rem;
 }
 
-/* ── Photo Thumbs ── */
-.photo-thumb {
-    position: relative;
-    border-radius: 10px;
-    overflow: hidden;
-    cursor: zoom-in;
-}
-.photo-thumb-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(0,0,0,0);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.6rem;
-    opacity: 0;
-    transition: background .2s ease, opacity .2s ease;
-    border-radius: 10px;
-}
-.photo-thumb:hover .photo-thumb-overlay {
-    background: rgba(0,0,0,.35);
-    opacity: 1;
-}
-
-/* ── Lightbox ── */
-#lightbox {
-    display: none;
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    background: rgba(0,0,0,.92);
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    animation: lbFadeIn .2s ease;
-}
-#lightbox.open { display: flex; }
-@keyframes lbFadeIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-}
-#lb-img {
-    max-width: 92vw;
-    max-height: 82vh;
-    object-fit: contain;
-    border-radius: 10px;
-    box-shadow: 0 8px 48px rgba(0,0,0,.7);
-    transition: opacity .18s ease;
-    user-select: none;
-}
-#lb-img.fade { opacity: 0; }
-#lb-caption {
-    color: #ccc;
-    font-size: .85rem;
-    margin-top: .75rem;
-    max-width: 88vw;
-    text-align: center;
-    word-break: break-all;
-}
-#lb-counter {
-    color: #888;
-    font-size: .78rem;
-    margin-top: .25rem;
-}
-.lb-btn {
-    position: fixed;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(255,255,255,.12);
-    border: none;
-    color: #fff;
-    font-size: 2rem;
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background .18s;
-    z-index: 10001;
-    line-height: 1;
-}
-.lb-btn:hover { background: rgba(255,255,255,.28); }
-#lb-prev { left: 16px; }
-#lb-next { right: 16px; }
-#lb-close {
-    position: fixed;
-    top: 16px;
-    right: 20px;
-    background: rgba(255,255,255,.12);
-    border: none;
-    color: #fff;
-    font-size: 1.4rem;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background .18s;
-    z-index: 10001;
-}
-#lb-close:hover { background: rgba(255,255,255,.28); }
-#lb-open-btn {
-    margin-top: .75rem;
-    color: #aef;
-    text-decoration: none;
-    font-size: .82rem;
-    opacity: .8;
-}
-#lb-open-btn:hover { opacity: 1; }
 </style>
 
-<!-- ── LIGHTBOX OVERLAY ── -->
-<div id="lightbox" onclick="lbBgClick(event)">
-    <button class="lb-btn" id="lb-prev" onclick="lbNav(-1)">&#8249;</button>
-    <button class="lb-btn" id="lb-next" onclick="lbNav(1)">&#8250;</button>
-    <button id="lb-close" onclick="closeLightbox()">&#10005;</button>
-
-    <img id="lb-img" src="" alt="">
-    <div id="lb-caption"></div>
-    <div id="lb-counter"></div>
-    <a id="lb-open-btn" href="#" target="_blank">↗ Doly ölçegde açmak</a>
-</div>
-
-<!-- Photo URLs for JS -->
-<script>
-const LB_PHOTOS = [
-    {% set photos = files | selectattr('file_type', '==', 'photo') | list %}
-    {% for f in photos %}
-    {
-        src: "{{ url_for('static', filename=f.file_path) }}",
-        name: {{ f.original_name | tojson }}
-    }{% if not loop.last %},{% endif %}
-    {% endfor %}
-];
-
-let lbIndex = 0;
-
-function openLightbox(idx) {
-    if (!LB_PHOTOS.length) return;
-    lbIndex = idx;
-    document.getElementById('lightbox').classList.add('open');
-    document.body.style.overflow = 'hidden';
-    lbShow();
-}
-
-function closeLightbox() {
-    document.getElementById('lightbox').classList.remove('open');
-    document.body.style.overflow = '';
-}
-
-function lbShow() {
-    const img = document.getElementById('lb-img');
-    const caption = document.getElementById('lb-caption');
-    const counter = document.getElementById('lb-counter');
-    const openBtn = document.getElementById('lb-open-btn');
-
-    img.classList.add('fade');
-    setTimeout(() => {
-        img.src = LB_PHOTOS[lbIndex].src;
-        img.alt = LB_PHOTOS[lbIndex].name;
-        caption.textContent = LB_PHOTOS[lbIndex].name;
-        counter.textContent = (lbIndex + 1) + ' / ' + LB_PHOTOS.length;
-        openBtn.href = LB_PHOTOS[lbIndex].src;
-        img.classList.remove('fade');
-    }, 160);
-
-    // Hide prev/next if single photo
-    document.getElementById('lb-prev').style.display = LB_PHOTOS.length > 1 ? '' : 'none';
-    document.getElementById('lb-next').style.display = LB_PHOTOS.length > 1 ? '' : 'none';
-}
-
-function lbNav(dir) {
-    lbIndex = (lbIndex + dir + LB_PHOTOS.length) % LB_PHOTOS.length;
-    lbShow();
-}
-
-function lbBgClick(e) {
-    if (e.target === document.getElementById('lightbox')) closeLightbox();
-}
-
-document.addEventListener('keydown', function(e) {
-    const lb = document.getElementById('lightbox');
-    if (!lb.classList.contains('open')) return;
-    if (e.key === 'Escape')     closeLightbox();
-    if (e.key === 'ArrowLeft')  lbNav(-1);
-    if (e.key === 'ArrowRight') lbNav(1);
-});
-</script>
 
 {% endblock %}

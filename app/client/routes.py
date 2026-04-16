@@ -28,9 +28,6 @@ def calculate_current_period(report_type):
     return today.strftime('%Y-%m-%d')
 
 
-# ─────────────────────────────────────────
-# DASHBOARD
-# ─────────────────────────────────────────
 
 @client_bp.route('/dashboard')
 @client_required
@@ -128,9 +125,6 @@ def dashboard():
                            returned_reports=returned_reports)
 
 
-# ─────────────────────────────────────────
-# ARCHIVE
-# ─────────────────────────────────────────
 
 @client_bp.route('/archive')
 @client_required
@@ -194,9 +188,6 @@ def archive():
                            history_by_report=history_by_report)
 
 
-# ─────────────────────────────────────────
-# NEW REPORT
-# ─────────────────────────────────────────
 
 @client_bp.route('/report/new/<int:event_id>', methods=['GET', 'POST'])
 @client_required
@@ -303,9 +294,6 @@ def new_report(event_id):
                            last_return=None)
 
 
-# ─────────────────────────────────────────
-# EDIT REPORT (только если статус = returned)
-# ─────────────────────────────────────────
 
 @client_bp.route('/report/edit/<int:report_id>', methods=['GET', 'POST'])
 @client_required
@@ -432,9 +420,6 @@ def edit_report(report_id):
                            last_return=last_return)
 
 
-# ─────────────────────────────────────────
-# REPORT DETAIL (история проверок)
-# ─────────────────────────────────────────
 
 @client_bp.route('/report/<int:report_id>')
 @client_required

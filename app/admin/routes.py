@@ -5,9 +5,7 @@ from werkzeug.security import generate_password_hash
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
-#------------------------- Welaýatlar--------------------------------------------------------
-
-
+#Bellik: cities-welayatlar
 
 @admin_bp.route('/cities', methods=['GET', 'POST'])
 @roles_required('admin')
@@ -41,7 +39,7 @@ def toggle_city_status(city_id):
             new_status = 'blocked' if city['status'] == 'active' else 'active'
             cursor.execute("UPDATE cities SET status = %s WHERE id = %s", (new_status, city_id))
             conn.commit()
-            flash(f'Ýagdaýy üýtgedildi - {new_status}', 'info')
+            flash(f'Welaýatyň ýagdaýy üýtgedildi - {new_status}', 'info')
     conn.close()
     return redirect(url_for('admin.manage_cities'))
 
@@ -67,9 +65,7 @@ def update_city():
 
 
 
-
-#------------------------- Etraplar--------------------------------------------------------
-
+#Bellik: districts-etraplar
 
 
 @admin_bp.route('/districts', methods=['GET', 'POST'])
@@ -139,11 +135,6 @@ def toggle_district_status(dist_id):
             flash(f'Etrabyň ýa-da şäheriň ýagdaýy  "{new_status}" edildi', 'info')
     conn.close()
     return redirect(url_for('admin.manage_districts'))
-
-
-
-#------------------------- Edaralar--------------------------------------------------------
-
 
 
 
@@ -241,11 +232,6 @@ def toggle_org_status(org_id):
 
 
 
-
-#------------------------- Maksatnamalar--------------------------------------------------------
-
-
-
 @admin_bp.route('/programs', methods=['GET', 'POST'])
 @roles_required('admin')
 def manage_programs():
@@ -297,12 +283,6 @@ def toggle_program_status(id):
         conn.commit()
     conn.close()
     return redirect(url_for('admin.manage_programs'))
-
-
-
-
-#------------------------- Çäreler--------------------------------------------------------
-
 
 
 
@@ -418,9 +398,6 @@ def toggle_event_status(id):
 
 
 
-#------------------------- Çäräniň ýagdaýlary--------------------------------------------------------
-
-
 
 @admin_bp.route('/event-statuses', methods=['GET', 'POST'])
 @roles_required('admin')
@@ -473,11 +450,6 @@ def toggle_event_type_status(id):
 
 
 
-
-#------------------------- Sebäpler--------------------------------------------------------
-
-
-
 @admin_bp.route('/failure-reasons', methods=['GET', 'POST'])
 @roles_required('admin')
 def manage_failure_reasons():
@@ -526,10 +498,6 @@ def toggle_failure_reason(id):
         conn.commit()
     conn.close()
     return redirect(url_for('admin.manage_failure_reasons'))
-
-
-
-#------------------------- Ulanyjylar--------------------------------------------------------
 
 
 
@@ -638,10 +606,6 @@ def toggle_user_status(id):
             flash(f'Ulanyjynyň ýagdaýy üýtgedildi: {new_status}', 'info')
     conn.close()
     return redirect(url_for('admin.manage_users'))
-
-
-
-#------------------------- Maksatnamalary tabshyrmagyn wagtlary--------------------------------------------------------
 
 
 
