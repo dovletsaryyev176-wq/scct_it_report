@@ -65,8 +65,7 @@ db.sqlite3-journal
 instance/
 .webassets-cache
 
-# Static files and uploads
-app/static/
+# User uploads
 app/static/uploads/
 
 # Scrapy stuff:
