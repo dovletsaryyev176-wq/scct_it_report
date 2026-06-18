@@ -44,11 +44,13 @@ def dashboard():
     quarter = (today.month - 1) // 3 + 1
     current_quarter = f"{current_year}-Q{quarter}"
 
+    filter_program_id = request.args.get('program_id') or None
+
     conn = get_db_connection()
     with conn.cursor() as cursor:
 
         # 1) Мероприятия без отчёта за текущий период
-        cursor.execute("""
+        query = """
             SELECT
                 e.id,
                 e.item_number,
@@ -82,13 +84,32 @@ def dashboard():
               AND e.status = 'active'
               AND pr.status = 'active'
               AND r.id IS NULL
-            ORDER BY e.item_number ASC
-        """, (
+        """
+        params = [
             current_day, current_week, current_month, current_quarter, current_year,
             current_day, current_week, current_month, current_quarter, current_year,
             org_id
-        ))
+        ]
+        if filter_program_id:
+            query += " AND e.program_id = %s"
+            params.append(filter_program_id)
+        query += " ORDER BY e.item_number ASC"
+
+        cursor.execute(query, params)
         my_events = cursor.fetchall()
+
+        # Список программ, в которых участвует организация (для фильтра)
+        cursor.execute("""
+            SELECT DISTINCT p.id, p.name
+            FROM programs p
+            JOIN events e ON e.program_id = p.id
+            JOIN event_organizations eo ON e.id = eo.event_id
+            WHERE eo.organization_id = %s
+              AND e.status = 'active'
+              AND p.status = 'active'
+            ORDER BY p.name ASC
+        """, (org_id,))
+        programs = cursor.fetchall()
 
         # 2) Возвращённые отчёты — нужна коррекция клиентом
         cursor.execute("""
@@ -122,7 +143,9 @@ def dashboard():
     conn.close()
     return render_template('client/dashboard.html',
                            events=my_events,
-                           returned_reports=returned_reports)
+                           returned_reports=returned_reports,
+                           programs=programs,
+                           filter_program_id=filter_program_id)
 
 
 
@@ -132,9 +155,11 @@ def archive():
     from app import get_db_connection
     org_id = session.get('org_id')
 
+    filter_program_id = request.args.get('program_id') or None
+
     conn = get_db_connection()
     with conn.cursor() as cursor:
-        cursor.execute("""
+        query = """
             SELECT
                 r.id,
                 r.report_period,
@@ -152,9 +177,26 @@ def archive():
             JOIN event_statuses es ON r.status_id = es.id
             LEFT JOIN report_submissions rs ON r.id = rs.report_id
             WHERE r.organization_id = %s
-            ORDER BY r.created_at DESC
-        """, (org_id,))
+        """
+        params = [org_id]
+        if filter_program_id:
+            query += " AND e.program_id = %s"
+            params.append(filter_program_id)
+        query += " ORDER BY r.created_at DESC"
+
+        cursor.execute(query, params)
         reports = cursor.fetchall()
+
+        # Список программ, по которым у организации есть отчёты (для фильтра)
+        cursor.execute("""
+            SELECT DISTINCT p.id, p.name
+            FROM programs p
+            JOIN events e ON e.program_id = p.id
+            JOIN reports r ON r.event_id = e.id
+            WHERE r.organization_id = %s
+            ORDER BY p.name ASC
+        """, (org_id,))
+        programs = cursor.fetchall()
 
         files_by_report = {}
         history_by_report = {}
@@ -185,7 +227,9 @@ def archive():
     return render_template('client/archive.html',
                            reports=reports,
                            files_by_report=files_by_report,
-                           history_by_report=history_by_report)
+                           history_by_report=history_by_report,
+                           programs=programs,
+                           filter_program_id=filter_program_id)
 
 
 

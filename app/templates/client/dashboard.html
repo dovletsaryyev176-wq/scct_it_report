@@ -3,17 +3,6 @@
 {% block content %}
 <div class="container-fluid">
 
-    {# ── Приветственная плашка ── #}
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm rounded-4 bg-success text-white">
-                <div class="card-body p-4">
-                    <p class="mb-0 opacity-75">{{ session.get('full_name') }}, Siz öz edaraňyzyň hasabatlar paneline girdiňiz.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
     {# ── Навигация ── #}
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div class="btn-group shadow-sm rounded-3 bg-white p-1">
@@ -112,9 +101,22 @@
     ══════════════════════════════════════════ #}
     <div class="card border-0 shadow-sm rounded-4">
         <div class="card-header bg-white border-0 pt-3 pb-2 px-4 rounded-top-4">
-            <div class="d-flex align-items-center gap-2">
-                <i class="bi bi-list-check text-success fs-5"></i>
-                <h6 class="mb-0 fw-bold text-dark">Hasabat berilmeli çäreler</h6>
+            <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-list-check text-success fs-5"></i>
+                    <h6 class="mb-0 fw-bold text-dark">Hasabat berilmeli çäreler</h6>
+                </div>
+                <form method="GET" action="{{ url_for('client.dashboard') }}" class="d-flex gap-2 align-items-center">
+                    <select name="program_id" class="form-select form-select-sm bg-light border-0 rounded-3" style="min-width: 220px;" onchange="this.form.submit()">
+                        <option value="">Ähli maksatnamalar</option>
+                        {% for p in programs %}
+                            <option value="{{ p.id }}" {{ 'selected' if p.id|string == filter_program_id }}>{{ p.name }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if filter_program_id %}
+                    <a href="{{ url_for('client.dashboard') }}" class="btn btn-sm btn-outline-secondary rounded-3">Arassala</a>
+                    {% endif %}
+                </form>
             </div>
         </div>
         <div class="table-responsive">

@@ -47,17 +47,17 @@
                 <div class="d-flex gap-2 flex-wrap">
                     {% if p.cnt_under_review > 0 %}
                     <span class="badge rounded-pill bg-warning text-dark px-3 py-2">
-                        ⏳ {{ p.cnt_under_review }} barlagda
+                        ⏳ {{ p.cnt_under_review }} hasabat barlagda
                     </span>
                     {% endif %}
                     {% if p.cnt_returned > 0 %}
                     <span class="badge rounded-pill bg-danger px-3 py-2">
-                        ↩ {{ p.cnt_returned }} gaýtaryldy
+                        ↩ {{ p.cnt_returned }} hasabat gaýtaryldy
                     </span>
                     {% endif %}
                     {% if p.cnt_accepted > 0 %}
                     <span class="badge rounded-pill bg-success px-3 py-2">
-                        ✓ {{ p.cnt_accepted }} kabul edildi
+                        ✓ {{ p.cnt_accepted }} hasabat kabul edildi
                     </span>
                     {% endif %}
                     {% if p.cnt_under_review == 0 and p.cnt_returned == 0 and p.cnt_accepted == 0 %}

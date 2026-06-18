@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3>Etraplar we şäherler</h3>
+    <h3>Etraplar we şäherçeler</h3>
     <button class="btn btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#addDistrictModal">
-        + Täze etrap ýa-da şäher goşmak
+        + Täze etrap ýa-da şäherçe goşmak
     </button>
 </div>
 
@@ -11,7 +11,7 @@
     <table class="table table-hover align-middle mb-0">
         <thead class="table-light border-bottom">
             <tr>
-                <th>Etrap / Şäher</th>
+                <th>Etrap / Şäherçe</th>
                 <th>Welaýat</th>
                 <th>Ýagdaýy</th>
                 <th>Goşulan wagty</th>
@@ -58,7 +58,7 @@
 <div class="modal fade" id="addDistrictModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <form method="POST" class="modal-content border-0 shadow">
-            <div class="modal-header bg-success text-white"><h5>Täze etrap ýa-da şäher goşmak</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-header bg-success text-white"><h5>Täze etrap ýa-da şäherçe goşmak</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
                 <div class="mb-3">
                     <label class="form-label">Welaýaty saýlaň</label>
@@ -70,7 +70,7 @@
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Etrabyň ýa-da şäheriň ady</label>
+                    <label class="form-label">Etrabyň ýa-da şäherçäniň ady</label>
                     <input type="text" name="name" class="form-control form-control-lg" placeholder="Adyny ýazyň..." required>
                 </div>
             </div>
@@ -85,7 +85,7 @@
 <div class="modal fade" id="editDistrictModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <form action="{{ url_for('admin.update_district') }}" method="POST" class="modal-content border-0 shadow">
-            <div class="modal-header bg-success text-white"><h5>Etrabyň ýa-da şäheriň maglumatlaryny üýtgetmek</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-header bg-success text-white"><h5>Etrabyň ýa-da şäherçäniň maglumatlaryny üýtgetmek</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
                 <input type="hidden" name="id" id="edit-dist-id">
                 <div class="mb-3">
@@ -97,7 +97,7 @@
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Etrabyň ýa-da şäheriň täze ady</label>
+                    <label class="form-label">Etrabyň ýa-da şäherçäniň täze ady</label>
                     <input type="text" name="name" id="edit-dist-name" class="form-control form-control-lg" required>
                 </div>
             </div>

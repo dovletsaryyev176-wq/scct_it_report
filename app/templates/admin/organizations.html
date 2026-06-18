@@ -11,7 +11,7 @@
             <tr>
                 <th>Edaranyň ady</th>
                 <th>Ýokarky edarasy</th>
-                <th>Welaýat / Etrap / Şäher</th>
+                <th>Welaýat / Etrap / Şäherçe</th>
                 <th>Ýagdaýy</th>
                 <th>Telefon belgisi</th>
                 <th class="text-end">Amallar</th>
@@ -92,7 +92,7 @@
                     <div class="col-md-6">
                         <label class="form-label">Etrap / Şäher</label>
                         <select id="district_select" name="district_id" class="form-select" required disabled>
-                            <option value="" disabled selected>Welaýat saýlaň...</option>
+                            <option value="" disabled selected>Etrap/şäherçe saýlaň...</option>
                             {% for d in districts %}
                             <option value="{{ d.id }}" data-city="{{ d.city_id }}">{{ d.name }}</option>
                             {% endfor %}

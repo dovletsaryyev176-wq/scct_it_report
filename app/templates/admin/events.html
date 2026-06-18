@@ -10,6 +10,24 @@
     </button>
 </div>
 
+<form method="GET" action="{{ url_for('admin.manage_events') }}" class="mb-3">
+    <div class="row g-2 align-items-center">
+        <div class="col-md-4">
+            <select name="program_id" class="form-select bg-white shadow-sm border-0" onchange="this.form.submit()">
+                <option value="">Ähli maksatnamalar</option>
+                {% for p in programs %}
+                    <option value="{{ p.id }}" {{ 'selected' if p.id|string == filter_program_id }}>{{ p.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% if filter_program_id %}
+        <div class="col-auto">
+            <a href="{{ url_for('admin.manage_events') }}" class="btn btn-outline-secondary">Arassala</a>
+        </div>
+        {% endif %}
+    </div>
+</form>
+
 <div class="table-responsive bg-white rounded-4 shadow-sm border-0">
     <table class="table table-hover align-middle mb-0">
         <thead class="table-light border-bottom">
@@ -28,7 +46,7 @@
                 <td>
                     <div class="fw-bold text-dark" style="line-height: 1.2;">{{ e.name }}</div>
                     <div class="mt-1">
-                        <small class="text-muted"><i class="bi bi-calendar-event"></i> Möhet: {{ e.deadline }}</small>
+                        <small class="text-muted"><i class="bi bi-calendar-event"></i> Möhlet: {{ e.deadline }}</small>
                     </div>
                     <span class="badge bg-light text-secondary border-0 mt-1" style="font-size: 0.7rem; font-weight: 500;">
                         {{ e.program_name }}

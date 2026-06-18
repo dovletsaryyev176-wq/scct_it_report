@@ -5,7 +5,7 @@ from werkzeug.security import generate_password_hash
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
-#Bellik: cities-welayatlar
+#Bellik: cities-welaýatlar, districts-etraplar we şäherçeler
 
 @admin_bp.route('/cities', methods=['GET', 'POST'])
 @roles_required('admin')
@@ -80,7 +80,7 @@ def manage_districts():
         if name and city_id:
             cursor.execute("INSERT INTO districts (city_id, name) VALUES (%s, %s)", (city_id, name))
             conn.commit()
-            flash(f'"{name}" etraby üstünlikli goşuldy', 'success')
+            flash(f'"{name}" etraby/şäherçesi üstünlikli goşuldy', 'success')
         return redirect(url_for('admin.manage_districts'))
 
     
@@ -116,7 +116,7 @@ def update_district():
                            (name, city_id, dist_id))
             conn.commit()
         conn.close()
-        flash('Etrap ýa-da şäher maglumatlary täzelendi', 'success')
+        flash('Etrap ýa-da şäherçäniň maglumatlary täzelendi', 'success')
     return redirect(url_for('admin.manage_districts'))
 
 
@@ -132,7 +132,7 @@ def toggle_district_status(dist_id):
             new_status = 'blocked' if dist['status'] == 'active' else 'active'
             cursor.execute("UPDATE districts SET status = %s WHERE id = %s", (new_status, dist_id))
             conn.commit()
-            flash(f'Etrabyň ýa-da şäheriň ýagdaýy  "{new_status}" edildi', 'info')
+            flash(f'Etrabyň ýa-da şäherçäniň ýagdaýy  "{new_status}" edildi', 'info')
     conn.close()
     return redirect(url_for('admin.manage_districts'))
 
@@ -319,34 +319,42 @@ def manage_events():
         flash('Täze çäre üstünlikli goşuldy', 'success')
         return redirect(url_for('admin.manage_events'))
 
-    
-    cursor.execute("""
-        SELECT 
-            e.*, 
-            p.name as program_name, 
+
+    filter_program_id = request.args.get('program_id') or None
+
+    query = """
+        SELECT
+            e.*,
+            p.name as program_name,
             GROUP_CONCAT(o.name SEPARATOR ', ') as org_names,
             GROUP_CONCAT(o.id) as org_ids_list
         FROM events e
         JOIN programs p ON e.program_id = p.id
         LEFT JOIN event_organizations eo ON e.id = eo.event_id
         LEFT JOIN organizations o ON eo.organization_id = o.id
-        GROUP BY e.id 
-        ORDER BY e.item_number ASC
-    """)
+    """
+    params = []
+    if filter_program_id:
+        query += " WHERE e.program_id = %s"
+        params.append(filter_program_id)
+    query += " GROUP BY e.id ORDER BY e.item_number ASC"
+
+    cursor.execute(query, params)
     events = cursor.fetchall()
-    
-    
+
+
     cursor.execute("SELECT id, name FROM programs WHERE status = 'active' ORDER BY name ASC")
     programs = cursor.fetchall()
-    
+
     cursor.execute("SELECT id, name FROM organizations WHERE status = 'active' ORDER BY name ASC")
     organizations = cursor.fetchall()
-    
+
     conn.close()
-    return render_template('admin/events.html', 
-                           events=events, 
-                           programs=programs, 
-                           organizations=organizations)
+    return render_template('admin/events.html',
+                           events=events,
+                           programs=programs,
+                           organizations=organizations,
+                           filter_program_id=filter_program_id)
 
 
 

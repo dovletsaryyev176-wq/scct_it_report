@@ -3,17 +3,6 @@
 {% block content %}
 <div class="container-fluid">
 
-    {# ── Приветственная плашка ── #}
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm rounded-4 bg-success text-white">
-                <div class="card-body p-4">
-                    <p class="mb-0 opacity-75">{{ session.get('full_name') }}, Siz öz edaraňyzyň hasabatlar paneline girdiňiz.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
     {# ── Навигация ── #}
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div class="btn-group shadow-sm rounded-3 bg-white p-1">
@@ -24,9 +13,22 @@
                 <i class="bi bi-archive me-1"></i> Arhiw
             </a>
         </div>
-        <span class="badge bg-white text-dark border px-3 py-2 rounded-pill shadow-sm">
-            Tabşyrylan hasabatlar: {{ reports|length }}
-        </span>
+        <div class="d-flex gap-2 align-items-center">
+            <form method="GET" action="{{ url_for('client.archive') }}" class="d-flex gap-2 align-items-center">
+                <select name="program_id" class="form-select form-select-sm bg-white border-0 shadow-sm rounded-3" style="min-width: 220px;" onchange="this.form.submit()">
+                    <option value="">Ähli maksatnamalar</option>
+                    {% for p in programs %}
+                        <option value="{{ p.id }}" {{ 'selected' if p.id|string == filter_program_id }}>{{ p.name }}</option>
+                    {% endfor %}
+                </select>
+                {% if filter_program_id %}
+                <a href="{{ url_for('client.archive') }}" class="btn btn-sm btn-outline-secondary rounded-3">Arassala</a>
+                {% endif %}
+            </form>
+            <span class="badge bg-white text-dark border px-3 py-2 rounded-pill shadow-sm">
+                Tabşyrylan hasabatlar: {{ reports|length }}
+            </span>
+        </div>
     </div>
 
     <div class="card border-0 shadow-sm rounded-4">
@@ -174,9 +176,8 @@
                         <td class="text-end px-4">
                             <div class="d-flex gap-2 justify-content-end">
                                 <a href="{{ url_for('client.report_detail', report_id=r.id) }}"
-                                   class="btn btn-sm btn-outline-secondary rounded-3 px-3"
-                                   title="Taryhy görmek">
-                                    <i class="bi bi-clock-history"></i>
+                                   class="btn btn-sm btn-outline-secondary rounded-3 px-3">
+                                    <i class="bi bi-clock-history me-1"></i>Taryhy görmek
                                 </a>
                                 {% if rev_status == 'returned' %}
                                 <a href="{{ url_for('client.edit_report', report_id=r.id) }}"
