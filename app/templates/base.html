@@ -83,6 +83,23 @@
             <a class="nav-link {{ 'active' if request.path.startswith('/company/all-reports') }}"
                href="{{ url_for('company_user.all_reports') }}">Ähli hasabatlar</a>
         </li>
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle {{ 'active' if request.path.startswith('/company/reports/') }}"
+               href="#" id="companyReports" role="button" data-bs-toggle="dropdown">
+                Hasabatlar
+            </a>
+            <ul class="dropdown-menu border-0 shadow">
+                <li><h6 class="dropdown-header">Tabşyrylyşy boýunça</h6></li>
+                <li><a class="dropdown-item" href="{{ url_for('company_user.report_by_program') }}">Maksatnama boýunça</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('company_user.report_by_organization') }}">Edaralar boýunça</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('company_user.report_by_event') }}">Çäreler boýunça</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><h6 class="dropdown-header">Ýerine ýetirilişi boýunça</h6></li>
+                <li><a class="dropdown-item" href="{{ url_for('company_user.exec_by_program') }}">Maksatnamalaryň ýerine ýetirilişi</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('company_user.exec_by_organization') }}">Edaralaryň ýerine ýetirilişi</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('company_user.exec_by_event') }}">Çäreleriň ýerine ýetirilişi</a></li>
+            </ul>
+        </li>
                     {% endif %}
                     
                 

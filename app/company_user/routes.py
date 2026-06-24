@@ -518,3 +518,388 @@ def all_reports():
                            selected_org=organization_id,
                            selected_period=period,
                            selected_status=review_status)
+
+
+# ----------------------------------------------------------------------------
+# HASABATLAR (графические отчёты)
+# ----------------------------------------------------------------------------
+
+# Подсчёт отчётов по статусам проверки. Отсутствие строки в
+# report_submissions трактуем как 'under_review' (отчёт подан, но не проверен).
+# Guard `r.id IS NOT NULL` нужен из-за LEFT JOIN: строки без отчёта не должны
+# попадать в under_review (иначе COALESCE на NULL даст ложный +1).
+_STATUS_COUNTS_SQL = """
+    SUM(CASE WHEN r.id IS NOT NULL
+             AND COALESCE(rs.review_status, 'under_review') = 'under_review'
+             THEN 1 ELSE 0 END) AS cnt_under_review,
+    SUM(CASE WHEN rs.review_status = 'returned' THEN 1 ELSE 0 END) AS cnt_returned,
+    SUM(CASE WHEN rs.review_status = 'accepted' THEN 1 ELSE 0 END) AS cnt_accepted,
+    COUNT(r.id) AS total
+"""
+
+
+def _pivot_execution(flat, statuses, label_attr):
+    """Сворачивает плоские строки (group_id, ..., status_id, cnt) в строки по
+    группам со словарём counts[status_id] и строит структуру для графика.
+
+    Статусы (event_statuses) динамические, поэтому колонки/серии строятся по
+    переданному списку `statuses`. Возвращает (rows, chart, totals).
+    """
+    grouped = {}
+    order = []
+    for f in flat:
+        gid = f['group_id']
+        if gid not in grouped:
+            grouped[gid] = {**f, 'counts': {}, 'total': 0}
+            order.append(gid)
+        grouped[gid]['counts'][f['status_id']] = f['cnt']
+        grouped[gid]['total'] += f['cnt']
+
+    rows = [grouped[gid] for gid in order]
+
+    chart = {
+        'labels': [str(r[label_attr]) for r in rows],
+        'series': [
+            {'name': s['name'],
+             'data': [r['counts'].get(s['id'], 0) for r in rows]}
+            for s in statuses
+        ],
+    }
+
+    totals = {s['id']: sum(r['counts'].get(s['id'], 0) for r in rows) for s in statuses}
+    totals['total'] = sum(r['total'] for r in rows)
+    totals['groups'] = len(rows)
+
+    return rows, chart, totals
+
+
+@company_user_bp.route('/reports/by-program')
+@company_user_required
+def report_by_program():
+    """Общий отчёт по программам (графики)."""
+    from app import get_db_connection
+    conn = get_db_connection()
+
+    period = request.args.get('period', '').strip()
+    # Период фильтруется в ON-условии reports, чтобы программы без отчётов
+    # в этом периоде всё равно отображались (с нулями).
+    join_period = ""
+    params = []
+    if period:
+        join_period = " AND r.report_period LIKE %s"
+        params.append(f"%{period}%")
+
+    with conn.cursor() as cursor:
+        cursor.execute(f"""
+            SELECT
+                p.id,
+                p.name,
+                {_STATUS_COUNTS_SQL}
+            FROM programs p
+            LEFT JOIN events e ON e.program_id = p.id
+            LEFT JOIN reports r ON r.event_id = e.id{join_period}
+            LEFT JOIN report_submissions rs ON r.id = rs.report_id
+            WHERE p.status = 'active'
+            GROUP BY p.id, p.name
+            ORDER BY p.name ASC
+        """, tuple(params))
+        rows = cursor.fetchall()
+    conn.close()
+
+    totals = {
+        'under_review': sum(r['cnt_under_review'] for r in rows),
+        'returned': sum(r['cnt_returned'] for r in rows),
+        'accepted': sum(r['cnt_accepted'] for r in rows),
+        'total': sum(r['total'] for r in rows),
+        'programs': len(rows),
+    }
+
+    return render_template('company_user/report_by_program.html',
+                           rows=rows,
+                           totals=totals,
+                           selected_period=period)
+
+
+@company_user_bp.route('/reports/by-organization')
+@company_user_required
+def report_by_organization():
+    """Отчёт по организациям (с фильтром по программе)."""
+    from app import get_db_connection
+    conn = get_db_connection()
+
+    program_id = request.args.get('program_id', '')
+    period = request.args.get('period', '').strip()
+
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT id, name FROM programs WHERE status = 'active' ORDER BY name ASC")
+        programs_list = cursor.fetchall()
+
+        # Отталкиваемся от event_organizations — это организации, которые ОБЯЗАНЫ
+        # отчитываться. expected = сколько чаре закреплено за организацией,
+        # submitted_events = по скольким из них есть отчёт. Период фильтруется в
+        # ON-условии reports, чтобы не сданные за период тоже учитывались.
+        join_period = ""
+        params = []
+        if period:
+            join_period = " AND r.report_period LIKE %s"
+            params.append(f"%{period}%")
+
+        where_prog = ""
+        if program_id and program_id.isdigit():
+            where_prog = " AND e.program_id = %s"
+            params.append(int(program_id))
+
+        cursor.execute(f"""
+            SELECT
+                o.id,
+                o.name,
+                COUNT(DISTINCT e.id) AS expected,
+                COUNT(DISTINCT CASE WHEN r.id IS NOT NULL THEN e.id END) AS submitted_events,
+                {_STATUS_COUNTS_SQL}
+            FROM organizations o
+            JOIN event_organizations eo ON eo.organization_id = o.id
+            JOIN events e ON eo.event_id = e.id AND e.status = 'active'
+            LEFT JOIN reports r ON r.event_id = e.id
+                               AND r.organization_id = o.id{join_period}
+            LEFT JOIN report_submissions rs ON r.id = rs.report_id
+            WHERE o.status = 'active'{where_prog}
+            GROUP BY o.id, o.name
+            ORDER BY o.name ASC
+        """, tuple(params))
+        rows = cursor.fetchall()
+    conn.close()
+
+    # Не сданные = закреплённые чаре без отчёта (за выбранный период).
+    for r in rows:
+        r['not_submitted'] = r['expected'] - r['submitted_events']
+
+    totals = {
+        'under_review': sum(r['cnt_under_review'] for r in rows),
+        'returned': sum(r['cnt_returned'] for r in rows),
+        'accepted': sum(r['cnt_accepted'] for r in rows),
+        'not_submitted': sum(r['not_submitted'] for r in rows),
+        'expected': sum(r['expected'] for r in rows),
+        'total': sum(r['total'] for r in rows),
+        'organizations': len(rows),
+    }
+
+    return render_template('company_user/report_by_organization.html',
+                           rows=rows,
+                           totals=totals,
+                           programs=programs_list,
+                           selected_program=program_id,
+                           selected_period=period)
+
+
+@company_user_bp.route('/reports/by-event')
+@company_user_required
+def report_by_event():
+    """Общий отчёт по мероприятиям (с фильтром по программе)."""
+    from app import get_db_connection
+    conn = get_db_connection()
+
+    program_id = request.args.get('program_id', '')
+    period = request.args.get('period', '').strip()
+
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT id, name FROM programs WHERE status = 'active' ORDER BY name ASC")
+        programs_list = cursor.fetchall()
+
+        # Период фильтруется в ON-условии reports, чтобы чаре без отчётов в этом
+        # периоде всё равно отображались (с нулями). Порядок params: сначала
+        # период (раньше в SQL), потом программа (в WHERE).
+        join_period = ""
+        params = []
+        if period:
+            join_period = " AND r.report_period LIKE %s"
+            params.append(f"%{period}%")
+
+        where_prog = ""
+        if program_id and program_id.isdigit():
+            where_prog = " AND e.program_id = %s"
+            params.append(int(program_id))
+
+        cursor.execute(f"""
+            SELECT
+                e.id,
+                e.item_number,
+                e.name AS event_name,
+                p.name AS program_name,
+                {_STATUS_COUNTS_SQL}
+            FROM events e
+            JOIN programs p ON e.program_id = p.id
+            LEFT JOIN reports r ON r.event_id = e.id{join_period}
+            LEFT JOIN report_submissions rs ON r.id = rs.report_id
+            WHERE e.status = 'active'{where_prog}
+            GROUP BY e.id, e.item_number, e.name, p.name
+            ORDER BY p.name ASC, e.item_number ASC
+        """, tuple(params))
+        rows = cursor.fetchall()
+    conn.close()
+
+    totals = {
+        'under_review': sum(r['cnt_under_review'] for r in rows),
+        'returned': sum(r['cnt_returned'] for r in rows),
+        'accepted': sum(r['cnt_accepted'] for r in rows),
+        'total': sum(r['total'] for r in rows),
+        'events': len(rows),
+    }
+
+    return render_template('company_user/report_by_event.html',
+                           rows=rows,
+                           totals=totals,
+                           programs=programs_list,
+                           selected_program=program_id,
+                           selected_period=period)
+
+
+# ----------------------------------------------------------------------------
+# ÝERINE ÝETIRILIŞ (выполнение по статусам event_statuses)
+# ----------------------------------------------------------------------------
+
+@company_user_bp.route('/reports/execution/by-program')
+@company_user_required
+def exec_by_program():
+    """Выполнение программ — разбивка отчётов по статусам (event_statuses)."""
+    from app import get_db_connection
+    conn = get_db_connection()
+
+    period = request.args.get('period', '').strip()
+    params = []
+    where_period = ""
+    if period:
+        where_period = " AND r.report_period LIKE %s"
+        params.append(f"%{period}%")
+
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT id, name FROM event_statuses WHERE status = 'active' ORDER BY id ASC")
+        statuses = cursor.fetchall()
+
+        cursor.execute(f"""
+            SELECT
+                p.id   AS group_id,
+                p.name AS group_name,
+                r.status_id,
+                COUNT(r.id) AS cnt
+            FROM programs p
+            JOIN events e ON e.program_id = p.id
+            JOIN reports r ON r.event_id = e.id
+            JOIN event_statuses es ON r.status_id = es.id
+            WHERE p.status = 'active'{where_period}
+            GROUP BY p.id, p.name, r.status_id
+            ORDER BY p.name ASC
+        """, tuple(params))
+        flat = cursor.fetchall()
+    conn.close()
+
+    rows, chart, totals = _pivot_execution(flat, statuses, 'group_name')
+
+    return render_template('company_user/exec_by_program.html',
+                           rows=rows, chart=chart, totals=totals,
+                           statuses=statuses, selected_period=period)
+
+
+@company_user_bp.route('/reports/execution/by-organization')
+@company_user_required
+def exec_by_organization():
+    """Выполнение организациями — разбивка отчётов по статусам (event_statuses)."""
+    from app import get_db_connection
+    conn = get_db_connection()
+
+    program_id = request.args.get('program_id', '')
+    period = request.args.get('period', '').strip()
+
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT id, name FROM programs WHERE status = 'active' ORDER BY name ASC")
+        programs_list = cursor.fetchall()
+
+        cursor.execute("SELECT id, name FROM event_statuses WHERE status = 'active' ORDER BY id ASC")
+        statuses = cursor.fetchall()
+
+        params = []
+        where_prog = ""
+        if program_id and program_id.isdigit():
+            where_prog = " AND e.program_id = %s"
+            params.append(int(program_id))
+        where_period = ""
+        if period:
+            where_period = " AND r.report_period LIKE %s"
+            params.append(f"%{period}%")
+
+        cursor.execute(f"""
+            SELECT
+                o.id   AS group_id,
+                o.name AS group_name,
+                r.status_id,
+                COUNT(r.id) AS cnt
+            FROM organizations o
+            JOIN reports r ON r.organization_id = o.id
+            JOIN events e ON r.event_id = e.id
+            JOIN event_statuses es ON r.status_id = es.id
+            WHERE o.status = 'active'{where_prog}{where_period}
+            GROUP BY o.id, o.name, r.status_id
+            ORDER BY o.name ASC
+        """, tuple(params))
+        flat = cursor.fetchall()
+    conn.close()
+
+    rows, chart, totals = _pivot_execution(flat, statuses, 'group_name')
+
+    return render_template('company_user/exec_by_organization.html',
+                           rows=rows, chart=chart, totals=totals,
+                           statuses=statuses, programs=programs_list,
+                           selected_program=program_id, selected_period=period)
+
+
+@company_user_bp.route('/reports/execution/by-event')
+@company_user_required
+def exec_by_event():
+    """Выполнение мероприятий — разбивка отчётов по статусам (event_statuses)."""
+    from app import get_db_connection
+    conn = get_db_connection()
+
+    program_id = request.args.get('program_id', '')
+    period = request.args.get('period', '').strip()
+
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT id, name FROM programs WHERE status = 'active' ORDER BY name ASC")
+        programs_list = cursor.fetchall()
+
+        cursor.execute("SELECT id, name FROM event_statuses WHERE status = 'active' ORDER BY id ASC")
+        statuses = cursor.fetchall()
+
+        params = []
+        where_prog = ""
+        if program_id and program_id.isdigit():
+            where_prog = " AND e.program_id = %s"
+            params.append(int(program_id))
+        where_period = ""
+        if period:
+            where_period = " AND r.report_period LIKE %s"
+            params.append(f"%{period}%")
+
+        cursor.execute(f"""
+            SELECT
+                e.id          AS group_id,
+                e.item_number AS item_number,
+                e.name        AS event_name,
+                p.name        AS program_name,
+                r.status_id,
+                COUNT(r.id)   AS cnt
+            FROM events e
+            JOIN programs p ON e.program_id = p.id
+            JOIN reports r ON r.event_id = e.id
+            JOIN event_statuses es ON r.status_id = es.id
+            WHERE e.status = 'active'{where_prog}{where_period}
+            GROUP BY e.id, e.item_number, e.name, p.name, r.status_id
+            ORDER BY p.name ASC, e.item_number ASC
+        """, tuple(params))
+        flat = cursor.fetchall()
+    conn.close()
+
+    rows, chart, totals = _pivot_execution(flat, statuses, 'item_number')
+
+    return render_template('company_user/exec_by_event.html',
+                           rows=rows, chart=chart, totals=totals,
+                           statuses=statuses, programs=programs_list,
+                           selected_program=program_id, selected_period=period)

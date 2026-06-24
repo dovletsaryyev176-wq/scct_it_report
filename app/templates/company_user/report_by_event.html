@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h1 class="h3 fw-bold mb-0">Çäreler boýunça hasabat</h1>
+        <p class="text-muted small mb-0">Çäreler boýunça hasabatlaryň umumy ýagdaýy</p>
+    </div>
+</div>
+
+{# --- Фильтр --- #}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+        <form method="GET" action="{{ url_for('company_user.report_by_event') }}" class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label small fw-semibold">Maksatnama</label>
+                <select name="program_id" class="form-select">
+                    <option value="">-- Ähli maksatnamalar --</option>
+                    {% for p in programs %}
+                    <option value="{{ p.id }}" {% if p.id|string == selected_program %}selected{% endif %}>{{ p.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold">Döwür</label>
+                <input type="text" name="period" class="form-control" placeholder="Meselem: 2026-03" value="{{ selected_period }}">
+            </div>
+            <div class="col-md-3 text-end">
+                <a href="{{ url_for('company_user.report_by_event') }}" class="btn btn-light me-2">Arassala</a>
+                <button type="submit" class="btn btn-success px-4">Gözle</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{# --- Сводные карточки --- #}
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="text-muted small">Çäreler</div>
+                <div class="h3 fw-bold mb-0">{{ totals.events }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="text-muted small">Jemi hasabat</div>
+                <div class="h3 fw-bold mb-0">{{ totals.total }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md">
+        <div class="card border-0 shadow-sm h-100 border-start border-warning border-4">
+            <div class="card-body text-center">
+                <div class="text-muted small">⏳ Barlagda</div>
+                <div class="h3 fw-bold mb-0 text-warning">{{ totals.under_review }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md">
+        <div class="card border-0 shadow-sm h-100 border-start border-danger border-4">
+            <div class="card-body text-center">
+                <div class="text-muted small">↩ Gaýtarylan</div>
+                <div class="h3 fw-bold mb-0 text-danger">{{ totals.returned }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md">
+        <div class="card border-0 shadow-sm h-100 border-start border-success border-4">
+            <div class="card-body text-center">
+                <div class="text-muted small">✓ Kabul edilen</div>
+                <div class="h3 fw-bold mb-0 text-success">{{ totals.accepted }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# --- График --- #}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <h6 class="fw-bold mb-3">Çäreler boýunça hasabatlaryň ýagdaýy</h6>
+        <canvas id="chartByEvent" height="100"></canvas>
+    </div>
+</div>
+
+{# --- Таблица --- #}
+<div class="card border-0 shadow-sm mb-5">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="px-4 py-3">№</th>
+                        <th class="py-3">Çäre</th>
+                        <th class="py-3">Maksatnama</th>
+                        <th class="py-3 text-center">⏳ Barlagda</th>
+                        <th class="py-3 text-center">↩ Gaýtarylan</th>
+                        <th class="py-3 text-center">✓ Kabul edilen</th>
+                        <th class="px-4 py-3 text-center">Jemi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in rows %}
+                    <tr>
+                        <td class="px-4 fw-semibold text-muted">{{ loop.index }}</td>
+                        <td>
+                            <span class="text-muted">{{ r.item_number }}.</span>
+                            {{ r.event_name[:60] }}{% if r.event_name|length > 60 %}...{% endif %}
+                        </td>
+                        <td class="small text-muted">{{ r.program_name }}</td>
+                        <td class="text-center">{{ r.cnt_under_review }}</td>
+                        <td class="text-center">{{ r.cnt_returned }}</td>
+                        <td class="text-center">{{ r.cnt_accepted }}</td>
+                        <td class="px-4 text-center fw-semibold">{{ r.total }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <div style="font-size: 2.5rem; margin-bottom: 1rem;">📭</div>
+                            Maglumat tapylmady
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='vendor/chartjs/chart.umd.min.js') }}"></script>
+<script>
+    const labels = {{ rows | map(attribute='item_number') | list | tojson }};
+    const underReview = {{ rows | map(attribute='cnt_under_review') | list | tojson }};
+    const returned = {{ rows | map(attribute='cnt_returned') | list | tojson }};
+    const accepted = {{ rows | map(attribute='cnt_accepted') | list | tojson }};
+
+    const C = { warning: '#ffc107', danger: '#dc3545', success: '#198754' };
+
+    new Chart(document.getElementById('chartByEvent'), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                { label: 'Barlagda', data: underReview, backgroundColor: C.warning },
+                { label: 'Gaýtarylan', data: returned, backgroundColor: C.danger },
+                { label: 'Kabul edilen', data: accepted, backgroundColor: C.success },
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } },
+            scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } } }
+        }
+    });
+</script>
+{% endblock %}
